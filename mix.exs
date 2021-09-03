@@ -25,7 +25,9 @@ defmodule Pager.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:ecto_sql, "~> 3.6"},
+      {:postgrex, "~> 0.14", only: :test}
     ]
   end
 end
