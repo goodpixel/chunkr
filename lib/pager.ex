@@ -1,17 +1,29 @@
 defmodule Pager do
-  import Ecto.Query
-
   @moduledoc """
   Documentation for Pager.
   """
+
+  import Ecto.Query
+
+  defmacro __using__(opts) do
+    quote do
+      @defaults unquote(opts)
+
+      def paginate(queryable, sort, opts) do
+        opts = Keyword.merge(@defaults, opts)
+        Pager.paginate(queryable, sort, opts, __MODULE__)
+      end
+    end
+  end
 
   @doc """
 
   """
   # TODO: extract repo
+  # TODO: option: `include_cursor_values`
 
   # @spec paginate(Ecto.Queryable.t(), atom(), Keyword.t(), Pager.Config) ::
-  def paginate(queryable, custom_sort, opts, repo) do
+  def paginate(queryable, sort, opts, repo) do
     first = Keyword.get(opts, :first)
     last = Keyword.get(opts, :last)
     paging_direction = if first, do: :forward, else: :backward
@@ -24,9 +36,9 @@ defmodule Pager do
 
     rows =
       queryable
-      |> apply_where(paging_direction, after_cursor || before_cursor, custom_sort)
-      |> apply_order(paging_direction, custom_sort)
-      |> apply_select(custom_sort)
+      |> apply_where(paging_direction, after_cursor || before_cursor, sort)
+      |> apply_order(paging_direction, sort)
+      |> apply_select(sort)
       |> limit(^requested_limit + 1)
       |> repo.all()
 
@@ -39,7 +51,7 @@ defmodule Pager do
       end
 
     %{
-      records: rows_to_return |> Enum.map(fn {_cursor_fields, record} -> record end),
+      records: rows_to_return |> Enum.map(fn {_cursor_values, record} -> record end),
       has_previous_page:
         previous_page?(paging_direction, after_cursor, before_cursor, rows, requested_rows),
       has_next_page:
@@ -62,42 +74,33 @@ defmodule Pager do
     do: !!before_cursor
 
   defp row_to_cursor(nil), do: nil
-  defp row_to_cursor({fields, _record}), do: Pager.Cursor.encode(fields)
+  defp row_to_cursor({cursor_values, _record}), do: Pager.Cursor.encode(cursor_values)
 
   defp apply_where(query, :forward, nil, _custom_sort), do: query
-
-  # FIXME: remove testquerys
-  defp apply_where(query, :forward, cursor, custom_sort) do
-    Pager.TestQueries.beyond_cursor(query, cursor, custom_sort, :forward)
-  end
-
   defp apply_where(query, :backward, nil, _custom_sort), do: query
 
-  defp apply_where(query, :backward, cursor, _custom_sort) do
-    [last_name, id] = Pager.Cursor.decode!(cursor)
+  # FIXME: remove testquerys
+  defp apply_where(query, :forward, cursor, sort) do
+    Pager.TestQueries.beyond_cursor(query, cursor, sort, :forward)
+  end
 
-    from(row in query,
-      where:
-        fragment("lower(coalesce(?, ?))", row.last_name, "zzz") <= ^last_name and
-          (fragment("lower(coalesce(?, ?))", row.last_name, "zzz") < ^last_name or
-             (fragment("lower(coalesce(?, ?))", row.last_name, "zzz") == ^last_name and
-                row.id < ^id))
-    )
+  defp apply_where(query, :backward, cursor, sort) do
+    Pager.TestQueries.beyond_cursor(query, cursor, sort, :backward)
   end
 
   # FIXME: use config
-  defp apply_order(query, :forward, custom_sort) do
-    Pager.TestQueries.order(query, custom_sort)
+  defp apply_order(query, :forward, sort) do
+    Pager.TestQueries.order(query, sort)
   end
 
-  defp apply_order(query, :backward, custom_sort) do
+  defp apply_order(query, :backward, sort) do
     query
-    |> apply_order(:forward, custom_sort)
+    |> apply_order(:forward, sort)
     |> Ecto.Query.reverse_order()
   end
 
     # FIXME: use config
-  defp apply_select(queryable, custom_sort) do
-    Pager.TestQueries.with_cursor_fields(queryable, custom_sort)
+  defp apply_select(queryable, sort) do
+    Pager.TestQueries.with_cursor_fields(queryable, sort)
   end
 end
