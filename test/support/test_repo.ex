@@ -15,4 +15,6 @@ defmodule Pager.TestRepo do
 
     {:ok, Keyword.merge(config, test_config)}
   end
+
+  use Pager, queries: Pager.TestQueries
 end

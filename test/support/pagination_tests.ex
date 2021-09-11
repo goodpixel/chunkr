@@ -34,8 +34,8 @@ defmodule Pager.PaginationTests do
             expected_count = repo.aggregate(query, :count)
 
             paginated_results =
-              query
-              |> page_thru(custom_sort, repo, first: limit)
+              repo
+              |> page_thru(query, custom_sort, first: limit)
               |> Enum.flat_map(& &1.records)
 
             assert expected_count == length(paginated_results)
@@ -64,8 +64,8 @@ defmodule Pager.PaginationTests do
             expected_count = repo.aggregate(query, :count)
 
             paginated_results =
-              query
-              |> page_thru(custom_sort, repo, last: limit)
+              repo
+              |> page_thru(query, custom_sort, last: limit)
               |> Enum.reverse()
               |> Enum.flat_map(& &1.records)
 
@@ -99,8 +99,8 @@ defmodule Pager.PaginationTests do
 
             final_page = final_page_number(total_count, limit)
 
-            query
-            |> page_thru(custom_sort, repo, opts)
+            repo
+            |> page_thru(query, custom_sort, opts)
             |> Stream.with_index(1)
             |> Enum.each(fn {page, num} ->
               assert has_previous_page?(direction, num, final_page) == page.has_previous_page
