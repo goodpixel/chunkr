@@ -47,7 +47,7 @@ defmodule Pager do
         :backward -> Enum.reverse(requested)
       end
 
-    %{
+    %Pager.Page{
       records: rows_to_return |> Enum.map(fn {_cursor_values, record} -> record end),
       has_previous_page: has_previous_page?(paging_direction, after_cursor, rows, requested),
       has_next_page: has_next_page?(paging_direction, before_cursor, rows, requested),
