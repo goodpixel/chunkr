@@ -37,13 +37,13 @@ defmodule PagerTest do
     post: fn -> TestRepo.delete_all(User) end
   )
 
-  verify_pagination(TestRepo, TestQueries, :with_uuid,
+  verify_pagination(TestRepo, TestQueries, :uuid,
     pre: fn %{users: attrs} -> TestRepo.insert_all(User, attrs) end,
     query: from(u in User, as: :user),
     post: fn -> TestRepo.delete_all(User) end
   )
 
-  verify_pagination(TestRepo, TestQueries, :with_subquery,
+  verify_pagination(TestRepo, TestQueries, :subquery,
     pre: fn %{users: user_attrs, phones: phone_attrs} ->
       {_, users} = TestRepo.insert_all(User, user_attrs, returning: true)
       user_ids = users |> Enum.map(& &1.id)

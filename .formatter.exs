@@ -1,7 +1,8 @@
 # Used by "mix format"
 locals_without_parens = [
-  paginate: 1,
+  paginate_by: 1,
   sort: 2,
+  sort: 3
 ]
 
 [
