@@ -48,7 +48,7 @@ defmodule Pager do
       end
 
     %Pager.Page{
-      records: rows_to_return |> Enum.map(fn {_cursor_values, record} -> record end),
+      raw_results: rows_to_return,
       has_previous_page: has_previous_page?(paging_direction, after_cursor, rows, requested),
       has_next_page: has_next_page?(paging_direction, before_cursor, rows, requested),
       start_cursor: rows_to_return |> List.first() |> row_to_cursor(),

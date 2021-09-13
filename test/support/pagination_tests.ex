@@ -36,7 +36,9 @@ defmodule Pager.PaginationTests do
             paginated_results =
               repo
               |> page_thru(query, custom_sort, first: limit)
-              |> Enum.flat_map(& &1.records)
+              |> Enum.flat_map(fn page ->
+                Enum.map(page.raw_results, fn {_cursor_values, record} -> record end)
+              end)
 
             assert expected_count == length(paginated_results)
             assert expected_results == paginated_results
@@ -67,7 +69,9 @@ defmodule Pager.PaginationTests do
               repo
               |> page_thru(query, custom_sort, last: limit)
               |> Enum.reverse()
-              |> Enum.flat_map(& &1.records)
+              |> Enum.flat_map(fn page ->
+                Enum.map(page.raw_results, fn {_cursor_values, record} -> record end)
+              end)
 
             assert expected_count == length(paginated_results)
             assert expected_results == paginated_results
@@ -105,7 +109,7 @@ defmodule Pager.PaginationTests do
             |> Enum.each(fn {page, num} ->
               assert has_previous_page?(direction, num, final_page) == page.has_previous_page
               assert has_next_page?(direction, num, final_page) == page.has_next_page
-              assert page_size(num, total_count, limit) == length(page.records)
+              assert page_size(num, total_count, limit) == length(page.raw_results)
             end)
 
             unquote(post_hook).()
