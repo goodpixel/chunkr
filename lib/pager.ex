@@ -51,8 +51,8 @@ defmodule Pager do
       raw_results: rows_to_return,
       has_previous_page: has_previous_page?(paging_direction, after_cursor, rows, requested),
       has_next_page: has_next_page?(paging_direction, before_cursor, rows, requested),
-      start_cursor: rows_to_return |> List.first() |> row_to_cursor(),
-      end_cursor: rows_to_return |> List.last() |> row_to_cursor()
+      start_cursor: List.first(rows_to_return) |> row_to_cursor(),
+      end_cursor: List.last(rows_to_return) |> row_to_cursor()
     }
   end
 
@@ -68,12 +68,8 @@ defmodule Pager do
   defp apply_where(query, _sort, :forward, nil, _config), do: query
   defp apply_where(query, _sort, :backward, nil, _config), do: query
 
-  defp apply_where(query, sort, :forward, cursor, config) do
-    config.queries.beyond_cursor(query, cursor, sort, :forward)
-  end
-
-  defp apply_where(query, sort, :backward, cursor, config) do
-    config.queries.beyond_cursor(query, cursor, sort, :backward)
+  defp apply_where(query, sort, dir, cursor, config) do
+    config.queries.beyond_cursor(query, cursor, sort, dir)
   end
 
   defp apply_order(query, sort, :forward, config) do
@@ -81,8 +77,7 @@ defmodule Pager do
   end
 
   defp apply_order(query, sort, :backward, config) do
-    query
-    |> apply_order(sort, :forward, config)
+    apply_order(query, sort, :forward, config)
     |> Ecto.Query.reverse_order()
   end
 
