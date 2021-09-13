@@ -1,6 +1,8 @@
 defmodule Pager.PaginationHelpers do
   use ExUnitProperties
 
+  alias Pager.Page
+
   @doc """
   Streams pages for the entire result set starting with the given opts
   """
@@ -11,22 +13,22 @@ defmodule Pager.PaginationHelpers do
         [last: _limit] -> :backward
       end
 
-    repo.paginate(query, sort, opts)
+    repo.paginate!(query, sort, opts)
     |> Stream.unfold(fn
-      %{has_next_page: true, end_cursor: c} = page when dir == :forward ->
+      %Page{has_next_page: true, end_cursor: c} = page when dir == :forward ->
         opts = Keyword.put(opts, :after, c)
-        next_result = repo.paginate(query, sort, opts)
+        next_result = repo.paginate!(query, sort, opts)
         {page, next_result}
 
-      %{has_next_page: false} = page when dir == :forward ->
+      %Page{has_next_page: false} = page when dir == :forward ->
         {page, :done}
 
-      %{has_previous_page: true, start_cursor: c} = page when dir == :backward ->
+      %Page{has_previous_page: true, start_cursor: c} = page when dir == :backward ->
         opts = Keyword.put(opts, :before, c)
-        next_result = repo.paginate(query, sort, opts)
+        next_result = repo.paginate!(query, sort, opts)
         {page, next_result}
 
-      %{has_previous_page: false} = page when dir == :backward ->
+      %Page{has_previous_page: false} = page when dir == :backward ->
         {page, :done}
 
       :done ->
