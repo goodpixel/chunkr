@@ -3,7 +3,7 @@ defmodule Pager.PaginationTests do
 
   defmacro __using__(_) do
     quote do
-      import Pager.PaginationTests
+      import unquote(__MODULE__)
     end
   end
 

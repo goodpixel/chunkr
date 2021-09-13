@@ -1,7 +1,7 @@
 defmodule Pager.QueryBuilder do
   defmacro __using__(_) do
     quote do
-      import Pager.QueryBuilder
+      import unquote(__MODULE__)
       import Ecto.Query
     end
   end
