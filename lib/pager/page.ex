@@ -13,6 +13,18 @@ defmodule Pager.Page do
     * `start_cursor` — a cursor representing the first record in this page of results.
     * `end_cursor` — a cursor representing the last record in this page of results.
   """
+
+  @type cursor_values :: [any()]
+  @type record :: any()
+
+  @type t :: %__MODULE__{
+          raw_results: [{cursor_values(), record()}],
+          has_previous_page: boolean(),
+          has_next_page: boolean(),
+          start_cursor: Pager.Cursor.opaque_cursor() | nil,
+          end_cursor: Pager.Cursor.opaque_cursor() | nil
+        }
+
   @enforce_keys [:raw_results, :has_previous_page, :has_next_page, :start_cursor, :end_cursor]
   defstruct [:raw_results, :has_previous_page, :has_next_page, :start_cursor, :end_cursor]
 end
