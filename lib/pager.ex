@@ -1,13 +1,10 @@
 defmodule Pager do
-  @moduledoc """
-  Documentation for Pager.
-  """
-
   require Ecto.Query
+  alias Pager.{Config, Cursor, Page}
 
   defmacro __using__(config) do
     quote do
-      @default_config Pager.Config.new([{:repo, __MODULE__} | unquote(config)])
+      @default_config Config.new([{:repo, __MODULE__} | unquote(config)])
 
       def paginate(queryable, sort, opts) do
         Pager.paginate(queryable, sort, opts, @default_config)
@@ -15,10 +12,6 @@ defmodule Pager do
     end
   end
 
-  @doc """
-
-  """
-  # @spec paginate(Ecto.Queryable.t(), atom(), Keyword.t(), Pager.Config) ::
   def paginate(queryable, sort, opts, config) do
     first = Keyword.get(opts, :first)
     last = Keyword.get(opts, :last)
@@ -47,7 +40,7 @@ defmodule Pager do
         :backward -> Enum.reverse(requested)
       end
 
-    %Pager.Page{
+    %Page{
       raw_results: rows_to_return,
       has_previous_page: has_previous_page?(paging_direction, after_cursor, rows, requested),
       has_next_page: has_next_page?(paging_direction, before_cursor, rows, requested),
@@ -63,13 +56,14 @@ defmodule Pager do
   defp has_next_page?(:backward, cursor, _rows, _requested_rows), do: !!cursor
 
   defp row_to_cursor(nil), do: nil
-  defp row_to_cursor({cursor_values, _record}), do: Pager.Cursor.encode(cursor_values)
+  defp row_to_cursor({cursor_values, _record}), do: Cursor.encode(cursor_values)
 
   defp apply_where(query, _sort, :forward, nil, _config), do: query
   defp apply_where(query, _sort, :backward, nil, _config), do: query
 
   defp apply_where(query, sort, dir, cursor, config) do
-    config.queries.beyond_cursor(query, cursor, sort, dir)
+    cursor_values = Cursor.decode!(cursor)
+    config.queries.beyond_cursor(query, cursor_values, sort, dir)
   end
 
   defp apply_order(query, sort, :forward, config) do

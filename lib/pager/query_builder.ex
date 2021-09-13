@@ -44,13 +44,13 @@ defmodule Pager.QueryBuilder do
     [rop1] = operators |> Enum.map(&invert/1)
 
     quote do
-      def beyond_cursor(query, cursor, unquote(query_name), :forward) do
-        [val1] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
+        [val1] = cursor_values
         Ecto.Query.where(query, compare(unquote(f1), unquote(op1), val1, unquote(t1)))
       end
 
-      def beyond_cursor(query, cursor, unquote(query_name), :backward) do
-        [val1] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
+        [val1] = cursor_values
         Ecto.Query.where(query, compare(unquote(f1), unquote(rop1), val1, unquote(t1)))
       end
 
@@ -68,8 +68,8 @@ defmodule Pager.QueryBuilder do
     [rop1, rop2, rop3, rop4] = Enum.map(operators, &invert/1)
 
     quote do
-      def beyond_cursor(query, cursor, unquote(query_name), :forward) do
-        [val1, val2] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
+        [val1, val2] = cursor_values
 
         query
         |> Ecto.Query.where(
@@ -80,8 +80,8 @@ defmodule Pager.QueryBuilder do
         )
       end
 
-      def beyond_cursor(query, cursor, unquote(query_name), :backward) do
-        [val1, val2] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
+        [val1, val2] = cursor_values
 
         query
         |> Ecto.Query.where(
@@ -107,8 +107,8 @@ defmodule Pager.QueryBuilder do
     [rop1, rop2, rop3, rop4, rop5, rop6, rop7] = Enum.map(operators, &invert/1)
 
     quote do
-      def beyond_cursor(query, cursor, unquote(query_name), :forward) do
-        [val1, val2, val3] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
+        [val1, val2, val3] = cursor_values
 
         query
         |> Ecto.Query.where(
@@ -122,8 +122,8 @@ defmodule Pager.QueryBuilder do
         )
       end
 
-      def beyond_cursor(query, cursor, unquote(query_name), :backward) do
-        [val1, val2, val3] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
+        [val1, val2, val3] = cursor_values
 
         query
         |> Ecto.Query.where(
@@ -154,8 +154,8 @@ defmodule Pager.QueryBuilder do
       Enum.map(operators, &invert/1)
 
     quote do
-      def beyond_cursor(query, cursor, unquote(query_name), :forward) do
-        [val1, val2, val3, val4] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
+        [val1, val2, val3, val4] = cursor_values
 
         query
         |> Ecto.Query.where(
@@ -173,8 +173,8 @@ defmodule Pager.QueryBuilder do
         )
       end
 
-      def beyond_cursor(query, cursor, unquote(query_name), :backward) do
-        [val1, val2, val3, val4] = Pager.Cursor.decode!(cursor)
+      def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
+        [val1, val2, val3, val4] = cursor_values
 
         query
         |> Ecto.Query.where(
