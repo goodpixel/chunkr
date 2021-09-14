@@ -1,10 +1,10 @@
-defmodule Pager.OptsTest do
+defmodule Chunkr.OptsTest do
   use ExUnit.Case, async: true
-  alias Pager.{Opts, User}
+  alias Chunkr.{Opts, User}
 
-  doctest Pager.Opts
+  doctest Chunkr.Opts
 
-  describe "Pager.Opts.new/3" do
+  describe "Chunkr.Opts.new/3" do
     test "when paginating forwards without a cursor" do
       assert {:ok,
               %Opts{

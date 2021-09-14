@@ -1,4 +1,4 @@
-defmodule Pager.User do
+defmodule Chunkr.User do
   @moduledoc false
   use Ecto.Schema
 
@@ -9,7 +9,7 @@ defmodule Pager.User do
     field :middle_name, :string
     field :last_name, :string
 
-    has_many :phone_numbers, Pager.PhoneNumber
+    has_many :phone_numbers, Chunkr.PhoneNumber
 
     timestamps()
   end

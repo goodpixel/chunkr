@@ -1,5 +1,5 @@
-defmodule Pager.TestQueries do
-  use Pager.QueryBuilder
+defmodule Chunkr.TestQueries do
+  use Chunkr.PaginatedQueries
 
   paginate_by :single_field do
     sort :asc, as(:user).id

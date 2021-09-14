@@ -1,10 +1,10 @@
-defmodule Pager.CursorTest do
+defmodule Chunkr.CursorTest do
   use ExUnit.Case, async: true
-  alias Pager.Cursor
+  alias Chunkr.Cursor
 
-  doctest Pager.Cursor
+  doctest Chunkr.Cursor
 
-  describe "Pager.Cursor.decode/1" do
+  describe "Chunkr.Cursor.decode/1" do
     test "decodes a previously-encoded set of terms" do
       cursor_values = [{:foo, :bar}, 123, "yep"]
 

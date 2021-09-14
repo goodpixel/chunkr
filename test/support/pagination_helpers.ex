@@ -1,7 +1,7 @@
-defmodule Pager.PaginationHelpers do
+defmodule Chunkr.PaginationHelpers do
   use ExUnitProperties
 
-  alias Pager.Page
+  alias Chunkr.Page
 
   @doc """
   Streams pages for the entire result set starting with the given opts

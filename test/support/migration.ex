@@ -1,4 +1,4 @@
-defmodule Pager.Migration do
+defmodule Chunkr.Migration do
   @moduledoc false
   use Ecto.Migration
 

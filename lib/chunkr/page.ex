@@ -1,4 +1,4 @@
-defmodule Pager.Page do
+defmodule Chunkr.Page do
   @moduledoc """
   A single page of results.
 
@@ -24,10 +24,10 @@ defmodule Pager.Page do
           raw_results: [{cursor_values(), record()}],
           has_previous_page: boolean(),
           has_next_page: boolean(),
-          start_cursor: Pager.Cursor.opaque_cursor() | nil,
-          end_cursor: Pager.Cursor.opaque_cursor() | nil,
-          config: Pager.Config.t(),
-          opts: Pager.Opts.t()
+          start_cursor: Chunkr.Cursor.opaque_cursor() | nil,
+          end_cursor: Chunkr.Cursor.opaque_cursor() | nil,
+          config: Chunkr.Config.t(),
+          opts: Chunkr.Opts.t()
         }
 
   @enforce_keys [

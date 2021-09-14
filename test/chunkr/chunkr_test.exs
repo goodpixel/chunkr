@@ -1,16 +1,16 @@
-defmodule PagerTest do
+defmodule ChunkrTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
-  use Pager.PaginationTests
+  use Chunkr.PaginationTests
   import Ecto.Query
-  import Pager.PaginationHelpers
+  import Chunkr.PaginationHelpers
 
-  doctest Pager
+  doctest Chunkr
 
-  alias Pager.{PhoneNumber, TestQueries, TestRepo, User}
+  alias Chunkr.{PhoneNumber, TestQueries, TestRepo, User}
 
   setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Pager.TestRepo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Chunkr.TestRepo)
   end
 
   verify_pagination(TestRepo, TestQueries, :single_field,

@@ -1,4 +1,4 @@
-defmodule Pager.Opts do
+defmodule Chunkr.Opts do
   @moduledoc """
   Options for paginating
 
@@ -15,7 +15,7 @@ defmodule Pager.Opts do
   @type t :: %__MODULE__{
           query: Ecto.Query.t(),
           sort: atom(),
-          cursor: Pager.Cursor.opaque_cursor() | nil,
+          cursor: Chunkr.Cursor.opaque_cursor() | nil,
           paging_dir: :forward | :backward,
           limit: pos_integer()
         }

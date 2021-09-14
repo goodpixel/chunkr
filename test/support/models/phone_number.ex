@@ -1,4 +1,4 @@
-defmodule Pager.PhoneNumber do
+defmodule Chunkr.PhoneNumber do
   @moduledoc false
   use Ecto.Schema
 
@@ -6,7 +6,7 @@ defmodule Pager.PhoneNumber do
   schema "phone_numbers" do
     field(:number, :string)
 
-    belongs_to :user, Pager.User
+    belongs_to :user, Chunkr.User
 
     timestamps()
   end

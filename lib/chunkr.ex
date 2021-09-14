@@ -1,6 +1,6 @@
-defmodule Pager do
+defmodule Chunkr do
   require Ecto.Query
-  alias Pager.{Config, Cursor, Opts, Page}
+  alias Chunkr.{Config, Cursor, Opts, Page}
 
   defmacro __using__(config) do
     quote do

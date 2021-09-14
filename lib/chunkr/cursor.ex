@@ -1,4 +1,4 @@
-defmodule Pager.Cursor do
+defmodule Chunkr.Cursor do
   @moduledoc """
   Create and decode opaque, Base64-encoded cursors.
   """

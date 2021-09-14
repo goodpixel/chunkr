@@ -1,4 +1,4 @@
-defmodule Pager.Config do
+defmodule Chunkr.Config do
   @enforce_keys [:queries, :repo]
   defstruct [:queries, :repo]
 

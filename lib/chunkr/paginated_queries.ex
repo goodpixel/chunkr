@@ -1,4 +1,4 @@
-defmodule Pager.QueryBuilder do
+defmodule Chunkr.PaginatedQueries do
   defmacro __using__(_) do
     quote do
       import unquote(__MODULE__)
