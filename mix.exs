@@ -1,6 +1,9 @@
 defmodule Chunkr.MixProject do
   use Mix.Project
 
+  @name "Chunkr"
+  @repo_url "https://github.com/goodpixel/chunkr"
+
   def project do
     [
       app: :chunkr,
@@ -8,17 +11,13 @@ defmodule Chunkr.MixProject do
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      description: description(),
+      package: package(),
       deps: deps(),
-
-      # Docs
-      name: "Chunkr",
+      name: @name,
       source_url: "https://github.com/goodpixel/chunkr",
       # homepage_url: "http://YOUR_PROJECT_HOMEPAGE",
-      docs: [
-        main: "Chunkr", # The main page in the docs
-        # logo: "path/to/logo.png",
-        extras: ["README.md"]
-      ]
+      docs: docs()
     ]
   end
 
@@ -41,6 +40,24 @@ defmodule Chunkr.MixProject do
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
       {:postgrex, "~> 0.14", only: :test},
       {:stream_data, "~> 0.5", only: [:dev, :test]}
+    ]
+  end
+
+  defp description() do
+    "Keyset-based pagination for Ecto."
+  end
+
+  def package do
+    [
+      licenses: ["MIT"],
+      links: %{"GitHub" => @repo_url}
+    ]
+  end
+
+  defp docs do
+    [
+      main: @name, # The main page in the docs
+      # logo: "path/to/logo.png",
     ]
   end
 end
