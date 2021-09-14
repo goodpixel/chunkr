@@ -56,7 +56,7 @@ defmodule Chunkr.MixProject do
 
   defp docs do
     [
-      main: @name, # The main page in the docs
+      main: @name
       # logo: "path/to/logo.png",
     ]
   end
