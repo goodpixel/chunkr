@@ -23,9 +23,8 @@ defmodule Chunkr.Opts do
   defstruct [:query, :name, :cursor, :paging_dir, :limit]
 
   def new(query, query_name, opts) do
-    with {:ok, opts} <- validate_options(query_name, opts) do
-      {:ok, struct!(%__MODULE__{query: query}, opts)}
-    else
+    case validate_options(query_name, opts) do
+      {:ok, opts} -> {:ok, struct!(%__MODULE__{query: query}, opts)}
       {:error, message} -> {:invalid_opts, message}
     end
   end

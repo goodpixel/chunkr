@@ -6,25 +6,25 @@ defmodule Chunkr.TestQueries do
   end
 
   paginate_by :two_fields do
-    sort :asc, fragment("lower(coalesce(?, ?))", as(:user).last_name, "zzz")
+    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
     sort :desc, as(:user).id
   end
 
   paginate_by :three_fields do
-    sort :asc, fragment("lower(coalesce(?, ?))", as(:user).last_name, "zzz")
-    sort :asc, fragment("lower(coalesce(?, ?))", as(:user).first_name, "zzz")
+    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
+    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).first_name)
     sort :desc, as(:user).id
   end
 
   paginate_by :four_fields do
-    sort :desc, fragment("lower(coalesce(?, ?))", as(:user).last_name, "zzz")
-    sort :desc, fragment("lower(coalesce(?, ?))", as(:user).first_name, "zzz")
-    sort :desc, fragment("lower(coalesce(?, ?))", as(:user).middle_name, "zzz")
+    sort :desc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
+    sort :desc, fragment("lower(coalesce(?, 'zzz'))", as(:user).first_name)
+    sort :desc, fragment("lower(coalesce(?, 'zzz'))", as(:user).middle_name)
     sort :asc, as(:user).id
   end
 
   paginate_by :uuid do
-    sort :asc, fragment("lower(coalesce(?, ?))", as(:user).last_name, "zzz")
+    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
     sort :desc, as(:user).public_id, type: :binary_id
   end
 
