@@ -8,7 +8,17 @@ defmodule Chunkr.MixProject do
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+
+      # Docs
+      name: "Chunkr",
+      source_url: "https://github.com/goodpixel/chunkr",
+      # homepage_url: "http://YOUR_PROJECT_HOMEPAGE",
+      docs: [
+        main: "Chunkr", # The main page in the docs
+        # logo: "path/to/logo.png",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -28,6 +38,7 @@ defmodule Chunkr.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ecto_sql, "~> 3.6"},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
       {:postgrex, "~> 0.14", only: :test},
       {:stream_data, "~> 0.5", only: [:dev, :test]}
     ]
