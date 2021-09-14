@@ -3,13 +3,13 @@ defmodule Chunkr.Cursor do
   Create and decode opaque, Base64-encoded cursors.
   """
 
-  @type cursor_values :: list(any())
-  @type opaque_cursor :: String.t()
+  @type cursor_values() :: [any()]
+  @type opaque_cursor() :: binary()
 
   @doc """
   Create an opaque, Base64-encoded cursor from `cursor_values`.
   """
-  @spec encode(cursor_values()) :: opaque_cursor
+  @spec encode(cursor_values()) :: opaque_cursor()
   def encode(cursor_values) when is_list(cursor_values) do
     cursor_values
     |> :erlang.term_to_binary()
@@ -19,7 +19,7 @@ defmodule Chunkr.Cursor do
   @doc """
   Same as `decode/1` but raises an error for invalid cursors.
   """
-  @spec decode!(opaque_cursor) :: cursor_values() | none()
+  @spec decode!(opaque_cursor()) :: cursor_values() | none()
   def decode!(opaque_cursor) do
     case decode(opaque_cursor) do
       {:ok, cursor} -> cursor
@@ -30,7 +30,7 @@ defmodule Chunkr.Cursor do
   @doc """
   Decode an opaque cursor.
   """
-  @spec decode(opaque_cursor) :: {:ok, cursor_values()} | {:error, any}
+  @spec decode(opaque_cursor()) :: {:ok, cursor_values()} | {:error, any()}
   def decode(opaque_cursor) when is_binary(opaque_cursor) do
     cursor_values(opaque_cursor)
   end

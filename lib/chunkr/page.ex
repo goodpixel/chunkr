@@ -17,11 +17,10 @@ defmodule Chunkr.Page do
     * `config` — config used to generate this page.
   """
 
-  @type cursor_values :: [any()]
   @type record :: any()
 
   @type t :: %__MODULE__{
-          raw_results: [{cursor_values(), record()}],
+          raw_results: [{Chunkr.Cursor.cursor_values(), record()}],
           has_previous_page: boolean(),
           has_next_page: boolean(),
           start_cursor: Chunkr.Cursor.opaque_cursor() | nil,
