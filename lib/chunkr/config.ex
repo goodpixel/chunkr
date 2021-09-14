@@ -1,4 +1,8 @@
 defmodule Chunkr.Config do
+  @moduledoc """
+  Config for Chunkr pagination
+  """
+
   @enforce_keys [:queries, :repo]
   defstruct [:queries, :repo]
 

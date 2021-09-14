@@ -1,4 +1,5 @@
 defmodule Chunkr.TestQueries do
+  @moduledoc false
   use Chunkr.PaginatedQueries
 
   paginate_by :single_field do

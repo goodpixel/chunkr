@@ -1,4 +1,6 @@
 defmodule Chunkr.PaginationTests do
+  @moduledoc false
+
   import ExUnit.Assertions
 
   defmacro __using__(_) do

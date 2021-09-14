@@ -1,4 +1,6 @@
 defmodule Chunkr.PaginationHelpers do
+  @moduledoc false
+
   use ExUnitProperties
 
   alias Chunkr.Page

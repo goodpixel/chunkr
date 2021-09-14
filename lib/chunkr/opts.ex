@@ -11,7 +11,6 @@ defmodule Chunkr.Opts do
       start of the result set toward the end or from the end of the result set toward the beginning.
     * `limit` — the maximum number of results being retrieved from the page.
   """
-
   @type t :: %__MODULE__{
           query: Ecto.Query.t(),
           name: atom(),

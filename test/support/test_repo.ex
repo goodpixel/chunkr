@@ -1,4 +1,6 @@
 defmodule Chunkr.TestRepo do
+  @moduledoc false
+
   use Ecto.Repo,
     otp_app: :chunkr,
     adapter: Ecto.Adapters.Postgres
