@@ -7,13 +7,13 @@ defmodule Chunkr.PaginationTests do
     end
   end
 
-  defmacro verify_pagination(query_repo, queries_module, sort_name, opts \\ []) do
+  defmacro verify_pagination(query_repo, queries_module, query_name, opts \\ []) do
     pre_hook = Keyword.get(opts, :pre, fn -> nil end)
     subject_query = Keyword.fetch!(opts, :query)
     post_hook = Keyword.get(opts, :post, fn -> nil end)
 
     quote do
-      describe "#{inspect(unquote(sort_name))}" do
+      describe "#{inspect(unquote(query_name))}" do
         property "provides an overall result set that matches the non-paginated query when paging forward" do
           check all(
                   limit <- positive_integer(),
@@ -21,21 +21,21 @@ defmodule Chunkr.PaginationTests do
                   phone_attrs <- list_of(phone_attrs(), max_length: 30)
                 ) do
             unquote(pre_hook).(%{users: user_attrs, phones: phone_attrs})
-            custom_sort = unquote(sort_name)
+            query_name = unquote(query_name)
             repo = unquote(query_repo)
             query = unquote(subject_query)
-            queries_mod = unquote(queries_module)
+            queries = unquote(queries_module)
 
             expected_results =
               query
-              |> queries_mod.order(custom_sort)
+              |> queries.apply_order(query_name)
               |> repo.all()
 
             expected_count = repo.aggregate(query, :count)
 
             paginated_results =
               repo
-              |> page_thru(query, custom_sort, first: limit)
+              |> page_thru(query, query_name, first: limit)
               |> Enum.flat_map(fn page ->
                 Enum.map(page.raw_results, fn {_cursor_values, record} -> record end)
               end)
@@ -53,21 +53,21 @@ defmodule Chunkr.PaginationTests do
                   phone_attrs <- list_of(phone_attrs(), max_length: 30)
                 ) do
             unquote(pre_hook).(%{users: user_attrs, phones: phone_attrs})
-            custom_sort = unquote(sort_name)
+            query_name = unquote(query_name)
             repo = unquote(query_repo)
             query = unquote(subject_query)
-            queries_mod = unquote(queries_module)
+            queries = unquote(queries_module)
 
             expected_results =
               query
-              |> queries_mod.order(custom_sort)
+              |> queries.apply_order(query_name)
               |> repo.all()
 
             expected_count = repo.aggregate(query, :count)
 
             paginated_results =
               repo
-              |> page_thru(query, custom_sort, last: limit)
+              |> page_thru(query, query_name, last: limit)
               |> Enum.reverse()
               |> Enum.flat_map(fn page ->
                 Enum.map(page.raw_results, fn {_cursor_values, record} -> record end)
@@ -88,10 +88,10 @@ defmodule Chunkr.PaginationTests do
                   direction <- one_of([constant(:forward), constant(:backward)])
                 ) do
             unquote(pre_hook).(%{users: user_attrs, phones: phone_attrs})
-            custom_sort = unquote(sort_name)
+            query_name = unquote(query_name)
             repo = unquote(query_repo)
             query = unquote(subject_query)
-            queries_mod = unquote(queries_module)
+            queries = unquote(queries_module)
 
             total_count = repo.aggregate(query, :count)
 
@@ -104,7 +104,7 @@ defmodule Chunkr.PaginationTests do
             final_page = final_page_number(total_count, limit)
 
             repo
-            |> page_thru(query, custom_sort, opts)
+            |> page_thru(query, query_name, opts)
             |> Stream.with_index(1)
             |> Enum.each(fn {page, num} ->
               assert has_previous_page?(direction, num, final_page) == page.has_previous_page

@@ -9,7 +9,7 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 query: User,
-                sort: :first_name,
+                name: :first_name,
                 cursor: nil,
                 paging_dir: :forward,
                 limit: 101
@@ -20,7 +20,7 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 query: User,
-                sort: :first_name,
+                name: :first_name,
                 cursor: "abc123",
                 paging_dir: :forward,
                 limit: 101
@@ -31,7 +31,7 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 query: User,
-                sort: :middle_name,
+                name: :middle_name,
                 cursor: nil,
                 paging_dir: :backward,
                 limit: 99
@@ -42,7 +42,7 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 query: User,
-                sort: :middle_name,
+                name: :middle_name,
                 cursor: "def456",
                 paging_dir: :backward,
                 limit: 99

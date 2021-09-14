@@ -5,7 +5,7 @@ defmodule Chunkr.Opts do
   ## Fields
 
     * `query` — the non-paginated query to be extended for pagination purposes.
-    * `sort` — the custom sort used.
+    * `name` — the name of the pagination strategy.
     * `cursor` — the cursor beyond which results are retrieved.
     * `paging_dir` — either `:forward` or `:backward` depending on whether we're paging from the
       start of the result set toward the end or from the end of the result set toward the beginning.
@@ -14,27 +14,27 @@ defmodule Chunkr.Opts do
 
   @type t :: %__MODULE__{
           query: Ecto.Query.t(),
-          sort: atom(),
+          name: atom(),
           cursor: Chunkr.Cursor.opaque_cursor() | nil,
           paging_dir: :forward | :backward,
           limit: pos_integer()
         }
 
-  defstruct [:query, :sort, :cursor, :paging_dir, :limit]
+  defstruct [:query, :name, :cursor, :paging_dir, :limit]
 
-  def new(query, sort, opts) do
-    with {:ok, opts} <- validate_options(sort, opts) do
+  def new(query, query_name, opts) do
+    with {:ok, opts} <- validate_options(query_name, opts) do
       {:ok, struct!(%__MODULE__{query: query}, opts)}
     else
       {:error, message} -> {:invalid_opts, message}
     end
   end
 
-  defp validate_options(sort_name, opts) do
+  defp validate_options(query_name, opts) do
     with {:ok, limit, cursor, paging_direction} <- validate(opts) do
       {:ok,
        %{
-         sort: sort_name,
+         name: query_name,
          paging_dir: paging_direction,
          limit: limit,
          cursor: cursor

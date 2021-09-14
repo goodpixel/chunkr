@@ -6,29 +6,29 @@ defmodule Chunkr do
     quote do
       @default_config Config.new([{:repo, __MODULE__} | unquote(config)])
 
-      def paginate!(queryable, sort, opts) do
-        unquote(__MODULE__).paginate!(queryable, sort, opts, @default_config)
+      def paginate!(queryable, query_name, opts) do
+        unquote(__MODULE__).paginate!(queryable, query_name, opts, @default_config)
       end
 
-      def paginate(queryable, sort, opts) do
-        unquote(__MODULE__).paginate(queryable, sort, opts, @default_config)
+      def paginate(queryable, query_name, opts) do
+        unquote(__MODULE__).paginate(queryable, query_name, opts, @default_config)
       end
     end
   end
 
-  def paginate!(queryable, sort, opts, config) do
-    case paginate(queryable, sort, opts, config) do
+  def paginate!(queryable, query_name, opts, config) do
+    case paginate(queryable, query_name, opts, config) do
       {:ok, page} -> page
       {:error, message} -> raise ArgumentError, message
     end
   end
 
-  def paginate(queryable, sort, opts, %Config{} = config) do
-    with {:ok, opts} <- Opts.new(queryable, sort, opts) do
+  def paginate(queryable, query_name, opts, %Config{} = config) do
+    with {:ok, opts} <- Opts.new(queryable, query_name, opts) do
       rows =
         opts.query
         |> apply_where(opts, config)
-        |> apply_order(opts.sort, opts.paging_dir, config)
+        |> apply_order(opts.name, opts.paging_dir, config)
         |> apply_select(opts, config)
         |> apply_limit(opts.limit + 1, config)
         |> config.repo.all()
@@ -69,20 +69,20 @@ defmodule Chunkr do
 
   defp apply_where(query, opts, config) do
     cursor_values = Cursor.decode!(opts.cursor)
-    config.queries.beyond_cursor(query, cursor_values, opts.sort, opts.paging_dir)
+    config.queries.beyond_cursor(query, cursor_values, opts.name, opts.paging_dir)
   end
 
-  defp apply_order(query, sort, :forward, config) do
-    config.queries.order(query, sort)
+  defp apply_order(query, name, :forward, config) do
+    config.queries.apply_order(query, name)
   end
 
-  defp apply_order(query, sort, :backward, config) do
-    apply_order(query, sort, :forward, config)
+  defp apply_order(query, name, :backward, config) do
+    apply_order(query, name, :forward, config)
     |> Ecto.Query.reverse_order()
   end
 
   defp apply_select(query, opts, config) do
-    config.queries.with_cursor_fields(query, opts.sort)
+    config.queries.apply_select(query, opts.name)
   end
 
   # TODO: enforce min/max limit

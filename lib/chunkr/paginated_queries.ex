@@ -2,7 +2,7 @@ defmodule Chunkr.PaginatedQueries do
   defmacro __using__(_) do
     quote do
       import unquote(__MODULE__)
-      import Ecto.Query
+      require Ecto.Query
     end
   end
 
@@ -11,7 +11,7 @@ defmodule Chunkr.PaginatedQueries do
     implement(query_name, sorts)
   end
 
-  defmacro paginate_by(query_name, do: {:__block__, [], sorts}) do
+  defmacro paginate_by(query_name, do: {:__block__, _, sorts}) do
     sorts = Enum.map(sorts, fn {:sort, _, args} -> parse_sorts(args) end)
     implement(query_name, sorts)
   end
@@ -21,15 +21,15 @@ defmodule Chunkr.PaginatedQueries do
 
   def with_cursor_fields_func(query_name, fields) do
     quote do
-      def with_cursor_fields(query, unquote(query_name)) do
-        select(query, [record], {unquote(fields), record})
+      def apply_select(query, unquote(query_name)) do
+        Ecto.Query.select(query, [record], {unquote(fields), record})
       end
     end
   end
 
   def with_order_func(query_name, order_bys) do
     quote do
-      def order(query, unquote(query_name)) do
+      def apply_order(query, unquote(query_name)) do
         Ecto.Query.order_by(query, unquote(order_bys))
       end
     end
