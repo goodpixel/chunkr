@@ -4,13 +4,14 @@ defmodule Chunkr.Opts do
 
   ## Fields
 
-    * `query` — the non-paginated query to be extended for pagination purposes.
-    * `name` — the name of the pagination strategy.
-    * `cursor` — the cursor beyond which results are retrieved.
-    * `paging_dir` — either `:forward` or `:backward` depending on whether we're paging from the
+    * `:query` — The non-paginated query to be extended for pagination purposes.
+    * `:name` — The name of the pagination strategy.
+    * `:cursor` — The cursor beyond which results are retrieved.
+    * `:paging_dir` — Either `:forward` or `:backward` depending on whether we're paging from the
       start of the result set toward the end or from the end of the result set toward the beginning.
-    * `max_limit` — the maximum number of results the user can request per page.
-    * `limit` — the number of results to actually query for this page.
+    * `:max_limit` — The maximum number of results the user can request per page.
+    * `:limit` — The number of results to actually query for this page. Must be between `0` and
+      `max_limit`.
   """
   @type t :: %__MODULE__{
           repo: atom(),
@@ -92,10 +93,15 @@ defmodule Chunkr.Opts do
   defp validate_limit(limit, opts) do
     max_limit = Keyword.fetch!(opts, :max_limit)
 
-    if limit <= max_limit do
-      {:ok, limit}
-    else
-      {:error, "Page size of #{limit} was requested, but maximum page size is #{max_limit}."}
+    cond do
+      limit < 0 ->
+        {:error, "Page size of #{limit} was requested, but page size must be at least 0."}
+
+      limit <= max_limit ->
+        {:ok, limit}
+
+      true ->
+        {:error, "Page size of #{limit} was requested, but maximum page size is #{max_limit}."}
     end
   end
 end

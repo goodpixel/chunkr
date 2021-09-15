@@ -82,7 +82,13 @@ defmodule Chunkr.OptsTest do
       assert {:invalid_opts, _} = Opts.new(User, :middle_name, last: 99, after: 99)
     end
 
-    test "requesting too many records results in an `{:invalid_opts, message}` error" do
+    test "requesting a negative number of rows in an `{:invalid_opts, message}` error" do
+      opts = [repo: TestRepo, queries: QueriesModule, max_limit: 100]
+      assert {:invalid_opts, _} = Opts.new(User, :name, [{:first, -1} | opts])
+      assert {:ok, _} = Opts.new(User, :name, [{:first, 0} | opts])
+    end
+
+    test "requesting too many rows results in an `{:invalid_opts, message}` error" do
       opts = [repo: TestRepo, queries: QueriesModule, max_limit: 5]
 
       assert {:invalid_opts, _} = Opts.new(User, :name, [{:first, 6} | opts])
