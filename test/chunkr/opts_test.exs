@@ -75,11 +75,29 @@ defmodule Chunkr.OptsTest do
                )
     end
 
-    test "when providing invalid page options" do
+    test "providing invalid page options results in an `{:invalid_opts, message}` error" do
       assert {:invalid_opts, _} = Opts.new(User, :middle_name, first: 99, last: 99)
       assert {:invalid_opts, _} = Opts.new(User, :middle_name, after: 99, before: 99)
       assert {:invalid_opts, _} = Opts.new(User, :middle_name, first: 99, before: 99)
       assert {:invalid_opts, _} = Opts.new(User, :middle_name, last: 99, after: 99)
+    end
+
+    test "requesting too many records results in an `{:invalid_opts, message}` error" do
+      opts = [repo: TestRepo, queries: QueriesModule, max_limit: 5]
+
+      assert {:invalid_opts, _} = Opts.new(User, :name, [{:first, 6} | opts])
+      assert {:ok, _} = Opts.new(User, :name, [{:first, 5} | opts])
+
+      assert {:invalid_opts, _} = Opts.new(User, :name, [{:last, 6} | opts])
+      assert {:ok, _} = Opts.new(User, :name, [{:last, 5} | opts])
+    end
+
+    test "when the same key is present multiple times it uses the first one added" do
+      opts = [repo: TestRepo, queries: QueriesModule, first: 101, max_limit: 100]
+
+      assert {:invalid_opts, _} = Opts.new(User, :name, opts)
+      assert {:invalid_opts, _} = Opts.new(User, :name, opts ++ [{:max_limit, 101}])
+      assert {:ok, _} = Opts.new(User, :name, [{:max_limit, 101} | opts])
     end
   end
 end

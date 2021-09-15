@@ -14,11 +14,11 @@ defmodule Chunkr do
       @default_opts [{:repo, __MODULE__}, {:max_limit, 100} | unquote(opts)]
 
       def paginate!(queryable, query_name, opts) do
-        unquote(__MODULE__).paginate!(queryable, query_name, @default_opts ++ opts)
+        unquote(__MODULE__).paginate!(queryable, query_name, opts ++ @default_opts)
       end
 
       def paginate(queryable, query_name, opts) do
-        unquote(__MODULE__).paginate(queryable, query_name, @default_opts ++ opts)
+        unquote(__MODULE__).paginate(queryable, query_name, opts ++ @default_opts)
       end
     end
   end
@@ -45,11 +45,11 @@ defmodule Chunkr do
   See `Chunkr.Opts`
   """
 
-  def paginate(queryable, query_name, opts) do
-    case Opts.new(queryable, query_name, opts) do
+  def paginate(queryable, query_name, options) do
+    case Opts.new(queryable, query_name, options) do
       {:ok, opts} ->
         extended_rows =
-          opts.query
+          queryable
           |> apply_where(opts)
           |> apply_order(opts.paging_dir, opts)
           |> apply_select(opts)
