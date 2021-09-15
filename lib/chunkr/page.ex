@@ -4,8 +4,6 @@ defmodule Chunkr.Page do
 
   ## Fields
 
-    * `total_count` — not provided by default since it requires an extra database query, but
-      available by calling `fetch_total_count`
     * `raw_results` — rows in the form `{cursor_values, record}` where `cursor_values` is the list
       of values to be used for generating a cursor. Note that in cases where coalescing or other
       manipulation was performed for the sake of pagination, the cursor values will reflect
@@ -47,4 +45,33 @@ defmodule Chunkr.Page do
     :config,
     :opts
   ]
+
+  @doc """
+  Fetches the total, non-paginated count of records that match the query.
+
+  Counting the total number of records requires an extra database query,
+  so this is not performed by default.
+  """
+  @spec total_count(Chunkr.Page.t()) :: integer()
+  def total_count(%__MODULE__{config: %{repo: repo}, opts: %{query: query}}) do
+    repo.aggregate(query, :count)
+  end
+
+  @doc """
+  Extracts just the records out of the raw results.
+  """
+  @spec records(Chunkr.Page.t()) :: [any()]
+  def records(%__MODULE__{} = page) do
+    Enum.map(page.raw_results, fn {_cursor_values, record} -> record end)
+  end
+
+  @doc """
+  Returns opaque cursors with their corresponding records.
+  """
+  @spec cursors_and_records(Chunkr.Page.t()) :: [{String.t(), any()}]
+  def cursors_and_records(%__MODULE__{} = page) do
+    Enum.map(page.raw_results, fn {cursor_values, record} ->
+      {Chunkr.Cursor.encode(cursor_values), record}
+    end)
+  end
 end
