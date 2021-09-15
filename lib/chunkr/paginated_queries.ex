@@ -124,13 +124,13 @@ defmodule Chunkr.PaginatedQueries do
 
     quote do
       def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
-        [val1] = cursor_values
-        Ecto.Query.where(query, compare(unquote(f1), unquote(op1), val1, unquote(t1)))
+        [cv1] = cursor_values
+        Ecto.Query.where(query, compare(unquote(f1), unquote(op1), cv1, unquote(t1)))
       end
 
       def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
-        [val1] = cursor_values
-        Ecto.Query.where(query, compare(unquote(f1), unquote(rop1), val1, unquote(t1)))
+        [cv1] = cursor_values
+        Ecto.Query.where(query, compare(unquote(f1), unquote(rop1), cv1, unquote(t1)))
       end
 
       unquote(with_order_func(query_name, order_bys))
@@ -148,26 +148,26 @@ defmodule Chunkr.PaginatedQueries do
 
     quote do
       def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
-        [val1, val2] = cursor_values
+        [cv1, cv2] = cursor_values
 
         query
         |> Ecto.Query.where(
-          compare(unquote(f1), unquote(op1), val1, unquote(t1)) and
-            (compare(unquote(f1), unquote(op2), val1, unquote(t1)) or
-               (compare(unquote(f1), unquote(op3), val1, unquote(t1)) and
-                  compare(unquote(f2), unquote(op4), val2, unquote(t2))))
+          compare(unquote(f1), unquote(op1), cv1, unquote(t1)) and
+            (compare(unquote(f1), unquote(op2), cv1, unquote(t1)) or
+               (compare(unquote(f1), unquote(op3), cv1, unquote(t1)) and
+                  compare(unquote(f2), unquote(op4), cv2, unquote(t2))))
         )
       end
 
       def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
-        [val1, val2] = cursor_values
+        [cv1, cv2] = cursor_values
 
         query
         |> Ecto.Query.where(
-          compare(unquote(f1), unquote(rop1), val1, unquote(t1)) and
-            (compare(unquote(f1), unquote(rop2), val1, unquote(t1)) or
-               (compare(unquote(f1), unquote(rop3), val1, unquote(t1)) and
-                  compare(unquote(f2), unquote(rop4), val2, unquote(t2))))
+          compare(unquote(f1), unquote(rop1), cv1, unquote(t1)) and
+            (compare(unquote(f1), unquote(rop2), cv1, unquote(t1)) or
+               (compare(unquote(f1), unquote(rop3), cv1, unquote(t1)) and
+                  compare(unquote(f2), unquote(rop4), cv2, unquote(t2))))
         )
       end
 
@@ -188,32 +188,32 @@ defmodule Chunkr.PaginatedQueries do
 
     quote do
       def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
-        [val1, val2, val3] = cursor_values
+        [cv1, cv2, cv3] = cursor_values
 
         query
         |> Ecto.Query.where(
-          compare(unquote(f1), unquote(op1), val1, unquote(t1)) and
-            (compare(unquote(f1), unquote(op2), val1, unquote(t1)) or
-               ((compare(unquote(f1), unquote(op3), val1, unquote(t1)) and
-                   compare(unquote(f2), unquote(op4), val2, unquote(t2))) or
-                  (compare(unquote(f1), unquote(op5), val1, unquote(t1)) and
-                     compare(unquote(f2), unquote(op6), val2, unquote(t2)) and
-                     compare(unquote(f3), unquote(op7), val3, unquote(t3)))))
+          compare(unquote(f1), unquote(op1), cv1, unquote(t1)) and
+            (compare(unquote(f1), unquote(op2), cv1, unquote(t1)) or
+               ((compare(unquote(f1), unquote(op3), cv1, unquote(t1)) and
+                   compare(unquote(f2), unquote(op4), cv2, unquote(t2))) or
+                  (compare(unquote(f1), unquote(op5), cv1, unquote(t1)) and
+                     compare(unquote(f2), unquote(op6), cv2, unquote(t2)) and
+                     compare(unquote(f3), unquote(op7), cv3, unquote(t3)))))
         )
       end
 
       def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
-        [val1, val2, val3] = cursor_values
+        [cv1, cv2, cv3] = cursor_values
 
         query
         |> Ecto.Query.where(
-          compare(unquote(f1), unquote(rop1), val1, unquote(t1)) and
-            (compare(unquote(f1), unquote(rop2), val1, unquote(t1)) or
-               ((compare(unquote(f1), unquote(rop3), val1, unquote(t1)) and
-                   compare(unquote(f2), unquote(rop4), val2, unquote(t2))) or
-                  (compare(unquote(f1), unquote(rop5), val1, unquote(t1)) and
-                     compare(unquote(f2), unquote(rop6), val2, unquote(t2)) and
-                     compare(unquote(f3), unquote(rop7), val3, unquote(t3)))))
+          compare(unquote(f1), unquote(rop1), cv1, unquote(t1)) and
+            (compare(unquote(f1), unquote(rop2), cv1, unquote(t1)) or
+               ((compare(unquote(f1), unquote(rop3), cv1, unquote(t1)) and
+                   compare(unquote(f2), unquote(rop4), cv2, unquote(t2))) or
+                  (compare(unquote(f1), unquote(rop5), cv1, unquote(t1)) and
+                     compare(unquote(f2), unquote(rop6), cv2, unquote(t2)) and
+                     compare(unquote(f3), unquote(rop7), cv3, unquote(t3)))))
         )
       end
 
@@ -235,40 +235,40 @@ defmodule Chunkr.PaginatedQueries do
 
     quote do
       def beyond_cursor(query, cursor_values, unquote(query_name), :forward) do
-        [val1, val2, val3, val4] = cursor_values
+        [cv1, cv2, cv3, cv4] = cursor_values
 
         query
         |> Ecto.Query.where(
-          compare(unquote(f1), unquote(op1), val1, unquote(t1)) and
-            (compare(unquote(f1), unquote(op2), val1, unquote(t1)) or
-               ((compare(unquote(f1), unquote(op3), val1, unquote(t1)) and
-                   compare(unquote(f2), unquote(op4), val2, unquote(t2))) or
-                  ((compare(unquote(f1), unquote(op5), val1, unquote(t1)) and
-                      compare(unquote(f2), unquote(op6), val2, unquote(t2)) and
-                      compare(unquote(f3), unquote(op7), val3, unquote(t3))) or
-                     (compare(unquote(f1), unquote(op8), val1, unquote(t1)) and
-                        compare(unquote(f2), unquote(op9), val2, unquote(t2)) and
-                        compare(unquote(f3), unquote(op10), val3, unquote(t3)) and
-                        compare(unquote(f4), unquote(op11), val4, unquote(t4))))))
+          compare(unquote(f1), unquote(op1), cv1, unquote(t1)) and
+            (compare(unquote(f1), unquote(op2), cv1, unquote(t1)) or
+               ((compare(unquote(f1), unquote(op3), cv1, unquote(t1)) and
+                   compare(unquote(f2), unquote(op4), cv2, unquote(t2))) or
+                  ((compare(unquote(f1), unquote(op5), cv1, unquote(t1)) and
+                      compare(unquote(f2), unquote(op6), cv2, unquote(t2)) and
+                      compare(unquote(f3), unquote(op7), cv3, unquote(t3))) or
+                     (compare(unquote(f1), unquote(op8), cv1, unquote(t1)) and
+                        compare(unquote(f2), unquote(op9), cv2, unquote(t2)) and
+                        compare(unquote(f3), unquote(op10), cv3, unquote(t3)) and
+                        compare(unquote(f4), unquote(op11), cv4, unquote(t4))))))
         )
       end
 
       def beyond_cursor(query, cursor_values, unquote(query_name), :backward) do
-        [val1, val2, val3, val4] = cursor_values
+        [cv1, cv2, cv3, cv4] = cursor_values
 
         query
         |> Ecto.Query.where(
-          compare(unquote(f1), unquote(rop1), val1, unquote(t1)) and
-            (compare(unquote(f1), unquote(rop2), val1, unquote(t1)) or
-               ((compare(unquote(f1), unquote(rop3), val1, unquote(t1)) and
-                   compare(unquote(f2), unquote(rop4), val2, unquote(t2))) or
-                  ((compare(unquote(f1), unquote(rop5), val1, unquote(t1)) and
-                      compare(unquote(f2), unquote(rop6), val2, unquote(t2)) and
-                      compare(unquote(f3), unquote(rop7), val3, unquote(t3))) or
-                     (compare(unquote(f1), unquote(rop8), val1, unquote(t1)) and
-                        compare(unquote(f2), unquote(rop9), val2, unquote(t2)) and
-                        compare(unquote(f3), unquote(rop10), val3, unquote(t3)) and
-                        compare(unquote(f4), unquote(rop11), val4, unquote(t4))))))
+          compare(unquote(f1), unquote(rop1), cv1, unquote(t1)) and
+            (compare(unquote(f1), unquote(rop2), cv1, unquote(t1)) or
+               ((compare(unquote(f1), unquote(rop3), cv1, unquote(t1)) and
+                   compare(unquote(f2), unquote(rop4), cv2, unquote(t2))) or
+                  ((compare(unquote(f1), unquote(rop5), cv1, unquote(t1)) and
+                      compare(unquote(f2), unquote(rop6), cv2, unquote(t2)) and
+                      compare(unquote(f3), unquote(rop7), cv3, unquote(t3))) or
+                     (compare(unquote(f1), unquote(rop8), cv1, unquote(t1)) and
+                        compare(unquote(f2), unquote(rop9), cv2, unquote(t2)) and
+                        compare(unquote(f3), unquote(rop10), cv3, unquote(t3)) and
+                        compare(unquote(f4), unquote(rop11), cv4, unquote(t4))))))
         )
       end
 
