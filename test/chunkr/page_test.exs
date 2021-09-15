@@ -1,6 +1,6 @@
 defmodule Chunkr.PageTest do
   use ExUnit.Case, async: true
-  alias Chunkr.{Config, Cursor, Opts, Page}
+  alias Chunkr.{Cursor, Opts, Page}
 
   doctest Chunkr.Page
 
@@ -11,12 +11,7 @@ defmodule Chunkr.PageTest do
   end
 
   defp fake_page() do
-    config = %Config{
-      repo: MockRepo,
-      queries: SomeModule
-    }
-
-    opts = %Opts{query: User}
+    opts = %Opts{repo: MockRepo, queries: SomeModule, query: User}
 
     %Page{
       raw_results: [{[:cursor_val_1], :foo_record}, {[:cursor_val_2], :bar_record}],
@@ -24,7 +19,6 @@ defmodule Chunkr.PageTest do
       has_next_page: :maybe_not,
       start_cursor: "sure",
       end_cursor: "hrpmh",
-      config: config,
       opts: opts
     }
   end

@@ -6,19 +6,19 @@ defmodule Chunkr do
              |> Enum.fetch!(1)
 
   require Ecto.Query
-  alias Chunkr.{Config, Cursor, Opts, Page}
+  alias Chunkr.{Cursor, Opts, Page}
 
   @doc false
-  defmacro __using__(config) do
+  defmacro __using__(opts) do
     quote do
-      @default_config Config.new([{:repo, __MODULE__} | unquote(config)])
+      @default_opts [{:repo, __MODULE__}, {:max_limit, 100} | unquote(opts)]
 
       def paginate!(queryable, query_name, opts) do
-        unquote(__MODULE__).paginate!(queryable, query_name, opts, @default_config)
+        unquote(__MODULE__).paginate!(queryable, query_name, @default_opts ++ opts)
       end
 
       def paginate(queryable, query_name, opts) do
-        unquote(__MODULE__).paginate(queryable, query_name, opts, @default_config)
+        unquote(__MODULE__).paginate(queryable, query_name, @default_opts ++ opts)
       end
     end
   end
@@ -26,8 +26,8 @@ defmodule Chunkr do
   @doc """
   Same as `paginate/4`, but raises an error for invalid input.
   """
-  def paginate!(queryable, query_name, opts, config) do
-    case paginate(queryable, query_name, opts, config) do
+  def paginate!(queryable, query_name, opts) do
+    case paginate(queryable, query_name, opts) do
       {:ok, page} -> page
       {:error, message} -> raise ArgumentError, message
     end
@@ -48,16 +48,16 @@ defmodule Chunkr do
     cursor. If no cursor was specified, retrieves the last `n` results from the full set. This
     enables paginating backward from the end of the results toward the beginning.
   """
-  def paginate(queryable, query_name, opts, %Config{} = config) do
+  def paginate(queryable, query_name, opts) do
     case Opts.new(queryable, query_name, opts) do
       {:ok, opts} ->
         extended_rows =
           opts.query
-          |> apply_where(opts, config)
-          |> apply_order(opts.name, opts.paging_dir, config)
-          |> apply_select(opts, config)
+          |> apply_where(opts)
+          |> apply_order(opts.paging_dir, opts)
+          |> apply_select(opts)
           |> apply_limit(opts.limit + 1)
-          |> config.repo.all()
+          |> opts.repo.all()
 
         requested_rows = Enum.take(extended_rows, opts.limit)
 
@@ -74,7 +74,6 @@ defmodule Chunkr do
            has_next_page: has_next?(opts, extended_rows, requested_rows),
            start_cursor: List.first(rows_to_return) |> row_to_cursor(),
            end_cursor: List.last(rows_to_return) |> row_to_cursor(),
-           config: config,
            opts: opts
          }}
 
@@ -92,25 +91,25 @@ defmodule Chunkr do
   defp row_to_cursor(nil), do: nil
   defp row_to_cursor({cursor_values, _record}), do: Cursor.encode(cursor_values)
 
-  defp apply_where(query, %{cursor: nil}, _config), do: query
+  defp apply_where(query, %{cursor: nil}), do: query
 
-  defp apply_where(query, opts, config) do
+  defp apply_where(query, opts) do
     cursor_values = Cursor.decode!(opts.cursor)
-    config.queries.beyond_cursor(query, cursor_values, opts.name, opts.paging_dir)
+    opts.queries.beyond_cursor(query, cursor_values, opts.name, opts.paging_dir)
   end
 
-  defp apply_order(query, name, :forward, config) do
-    config.queries.apply_order(query, name)
+  defp apply_order(query, :forward, opts) do
+    opts.queries.apply_order(query, opts.name)
   end
 
   # TODO: move this
-  defp apply_order(query, name, :backward, config) do
-    apply_order(query, name, :forward, config)
+  defp apply_order(query, :backward, opts) do
+    apply_order(query, :forward, opts)
     |> Ecto.Query.reverse_order()
   end
 
-  defp apply_select(query, opts, config) do
-    config.queries.apply_select(query, opts.name)
+  defp apply_select(query, opts) do
+    opts.queries.apply_select(query, opts.name)
   end
 
   # TODO: Move this

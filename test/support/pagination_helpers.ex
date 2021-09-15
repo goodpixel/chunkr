@@ -5,6 +5,8 @@ defmodule Chunkr.PaginationHelpers do
   import ExUnit.Assertions, only: [assert: 1]
   alias Chunkr.Page
 
+  @max_limit 100
+
   def verify_pagination(repo, query, strategy, expected_results, expected_count) do
     assert_paginates_forward(repo, query, strategy, expected_results, expected_count)
     assert_paginates_backward(repo, query, strategy, expected_results, expected_count)
@@ -12,7 +14,7 @@ defmodule Chunkr.PaginationHelpers do
   end
 
   defp assert_paginates_forward(repo, query, strategy, expected_results, expected_count) do
-    check all limit <- positive_integer() do
+    check all limit <- integer(1..@max_limit) do
       paginated_results =
         repo
         |> page_thru(query, strategy, first: limit)
@@ -24,7 +26,7 @@ defmodule Chunkr.PaginationHelpers do
   end
 
   defp assert_paginates_backward(repo, query, strategy, expected_results, expected_count) do
-    check all limit <- positive_integer() do
+    check all limit <- integer(1..@max_limit) do
       paginated_results =
         repo
         |> page_thru(query, strategy, last: limit)
@@ -37,7 +39,7 @@ defmodule Chunkr.PaginationHelpers do
   end
 
   defp assert_page_size_and_metadata(repo, query, strategy, expected_count) do
-    check all limit <- positive_integer(),
+    check all limit <- integer(1..@max_limit),
               direction <- one_of([constant(:forward), constant(:backward)]) do
       opts =
         case direction do

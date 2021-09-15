@@ -9,17 +9,22 @@ defmodule Chunkr.Opts do
     * `cursor` — the cursor beyond which results are retrieved.
     * `paging_dir` — either `:forward` or `:backward` depending on whether we're paging from the
       start of the result set toward the end or from the end of the result set toward the beginning.
-    * `limit` — the maximum number of results being retrieved from the page.
+    * `max_limit` — the maximum number of results the user can request per page.
+    * `limit` — the number of results to actually query for this page.
   """
   @type t :: %__MODULE__{
+          repo: atom(),
+          queries: atom(),
           query: Ecto.Query.t(),
           name: atom(),
           cursor: Chunkr.Cursor.opaque_cursor() | nil,
           paging_dir: :forward | :backward,
+          max_limit: pos_integer(),
           limit: pos_integer()
         }
 
-  defstruct [:query, :name, :cursor, :paging_dir, :limit]
+  # @enforce_keys [:repo, :queries]
+  defstruct [:repo, :queries, :query, :name, :cursor, :paging_dir, :max_limit, :limit]
 
   def new(query, query_name, opts) do
     case validate_options(query_name, opts) do
@@ -29,11 +34,15 @@ defmodule Chunkr.Opts do
   end
 
   defp validate_options(query_name, opts) do
-    with {:ok, limit, cursor, paging_direction} <- validate(opts) do
+    with {:ok, limit, cursor, paging_direction} <- validate(opts),
+         {:ok, _limit} <- validate_limit(limit, opts) do
       {:ok,
        %{
+         repo: Keyword.fetch!(opts, :repo),
+         queries: Keyword.fetch!(opts, :queries),
          name: query_name,
          paging_dir: paging_direction,
+         max_limit: Keyword.fetch!(opts, :max_limit),
          limit: limit,
          cursor: cursor
        }}
@@ -56,9 +65,9 @@ defmodule Chunkr.Opts do
 
   defp validate(opts) do
     provided_keys = opts |> Keyword.take([:first, :last, :after, :before]) |> Keyword.keys()
-    provided_set = MapSet.new(provided_keys)
+    provided_key_set = MapSet.new(provided_keys)
 
-    case MapSet.new(@valid_sets) |> MapSet.member?(provided_set) do
+    case MapSet.new(@valid_sets) |> MapSet.member?(provided_key_set) do
       true -> {:ok, get_limit(opts), get_cursor(opts), get_paging_direction(opts)}
       false -> {:error, pagination_args_error(provided_keys)}
     end
@@ -77,6 +86,16 @@ defmodule Chunkr.Opts do
   end
 
   defp pagination_args_error(provided_keys) do
-    ~s(Invalid pagination params: [#{Enum.join(provided_keys, ", ")}]. Valid combinations are: #{@valid_combos})
+    ~s(Invalid pagination params: [#{Enum.join(provided_keys, ", ")}]. Valid combinations are: #{@valid_combos}.)
+  end
+
+  defp validate_limit(limit, opts) do
+    max_limit = Keyword.fetch!(opts, :max_limit)
+
+    if limit <= max_limit do
+      {:ok, limit}
+    else
+      {:error, "Page size of #{limit} was requested, but maximum page size is #{max_limit}."}
+    end
   end
 end

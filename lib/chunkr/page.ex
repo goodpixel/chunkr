@@ -12,7 +12,7 @@ defmodule Chunkr.Page do
     * `has_next_page` — whether or not there is a subsequent page of results.
     * `start_cursor` — a cursor representing the first record in this page of results.
     * `end_cursor` — a cursor representing the last record in this page of results.
-    * `config` — config used to generate this page.
+    * `opts` — opts used.
   """
 
   @type record :: any()
@@ -23,7 +23,6 @@ defmodule Chunkr.Page do
           has_next_page: boolean(),
           start_cursor: Chunkr.Cursor.opaque_cursor() | nil,
           end_cursor: Chunkr.Cursor.opaque_cursor() | nil,
-          config: Chunkr.Config.t(),
           opts: Chunkr.Opts.t()
         }
 
@@ -33,7 +32,6 @@ defmodule Chunkr.Page do
     :has_next_page,
     :start_cursor,
     :end_cursor,
-    :config,
     :opts
   ]
   defstruct [
@@ -42,7 +40,6 @@ defmodule Chunkr.Page do
     :has_next_page,
     :start_cursor,
     :end_cursor,
-    :config,
     :opts
   ]
 
@@ -53,8 +50,8 @@ defmodule Chunkr.Page do
   so this is not performed by default.
   """
   @spec total_count(Chunkr.Page.t()) :: integer()
-  def total_count(%__MODULE__{config: %{repo: repo}, opts: %{query: query}}) do
-    repo.aggregate(query, :count)
+  def total_count(%__MODULE__{opts: opts}) do
+    opts.repo.aggregate(opts.query, :count)
   end
 
   @doc """

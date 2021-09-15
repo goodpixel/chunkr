@@ -13,7 +13,13 @@ defmodule Chunkr.OptsTest do
                 cursor: nil,
                 paging_dir: :forward,
                 limit: 101
-              }} = Opts.new(User, :first_name, first: 101)
+              }} =
+               Opts.new(User, :first_name,
+                 repo: TestRepo,
+                 queries: QueriesModule,
+                 first: 101,
+                 max_limit: 200
+               )
     end
 
     test "when paginating forwards with a cursor" do
@@ -24,7 +30,14 @@ defmodule Chunkr.OptsTest do
                 cursor: "abc123",
                 paging_dir: :forward,
                 limit: 101
-              }} = Opts.new(User, :first_name, first: 101, after: "abc123")
+              }} =
+               Opts.new(User, :first_name,
+                 repo: TestRepo,
+                 queries: QueriesModule,
+                 first: 101,
+                 after: "abc123",
+                 max_limit: 200
+               )
     end
 
     test "when paginating backwards without a cursor" do
@@ -35,7 +48,13 @@ defmodule Chunkr.OptsTest do
                 cursor: nil,
                 paging_dir: :backward,
                 limit: 99
-              }} = Opts.new(User, :middle_name, last: 99)
+              }} =
+               Opts.new(User, :middle_name,
+                 repo: TestRepo,
+                 queries: QueriesModule,
+                 last: 99,
+                 max_limit: 100
+               )
     end
 
     test "when paginating backwards with a cursor" do
@@ -46,7 +65,14 @@ defmodule Chunkr.OptsTest do
                 cursor: "def456",
                 paging_dir: :backward,
                 limit: 99
-              }} = Opts.new(User, :middle_name, last: 99, before: "def456")
+              }} =
+               Opts.new(User, :middle_name,
+                 repo: TestRepo,
+                 queries: QueriesModule,
+                 last: 99,
+                 before: "def456",
+                 max_limit: 100
+               )
     end
 
     test "when providing invalid page options" do
