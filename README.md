@@ -89,7 +89,7 @@ NULL to an actual value using operators like `<` and `>`, so it simply drops the
 
 You'll notice that we must always use Ecto's `as` clause in order to identify where to find the
 field in question. This takes advantage of Ecto's [late bindings](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings)
-in referencing a query that is yet to ber established (you could actually use many
+in referencing a query that is yet to be established (you can use many
 different queries with a single pagination strategy defined here so long as each query provides
 each of the referenced bindings).
 
@@ -124,7 +124,7 @@ next_page = MyApp.Repo.paginate!(query, :profile_name, first: 25, after: first_p
 ```
 
 Here we're using the `:profile_name` pagination strategy established above, and we're providing
-all of the named bindings required by that strategy (in this case `:profile_name` and `:user`).
+all of the named bindings required by that strategy (in this case `:profile` and `:user`).
 
 See further documentation at `Chunkr.PaginatedQueries`.
 
