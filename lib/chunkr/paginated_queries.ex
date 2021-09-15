@@ -38,7 +38,7 @@ defmodule Chunkr.PaginatedQueries do
 
   Because these `sort/3` clauses must reference bindings that have not yet been established, each
   sort clause must use `:as` to take advantage of late binding. A parallel `:as` must then be used
-  within the query that gets passed to `Chunkr.paginate/4` or the query will fail. See
+  within the query that gets passed to `Chunkr.paginate/3` or the query will fail. See
   [Ecto Named bindings](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings) for more.
 
   ## NULL values in sort fields

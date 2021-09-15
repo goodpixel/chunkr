@@ -56,7 +56,7 @@ defmodule Chunkr.MixProject do
   defp docs do
     [
       main: @name,
-      logo: "assets/logo-s.svg",
+      logo: "assets/logo-s.svg"
     ]
   end
 end

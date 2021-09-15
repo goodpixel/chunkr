@@ -99,8 +99,6 @@ This involves dynamically implementing a function to order the results, function
 results against any supplied cursor, and a function to automatically retrieve both the records
 themselves as well as all fields necessary to generate the required cursors.
 
-----
-
 ### 2. Add `chunkr` to your `Ecto.Repo`:
 
 ```elixir
@@ -115,8 +113,6 @@ end
 
 This adds the convenience functions `paginate/3` and `paginate!/3` to your Repo.
 
-----
-
 ### 3. Paginate your queries!
 
 ```elixir
@@ -128,7 +124,7 @@ next_page = MyApp.Repo.paginate!(query, :profile_name, first: 25, after: first_p
 ```
 
 Here we're using the `:profile_name` pagination strategy established above, and we're providing
-all of the named bindings required by that strategy (in this case, `:profile_name` and `:user`).
+all of the named bindings required by that strategy (in this case `:profile_name` and `:user`).
 
 See further documentation at `Chunkr.PaginatedQueries`.
 

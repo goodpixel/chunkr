@@ -24,7 +24,7 @@ defmodule Chunkr do
   end
 
   @doc """
-  Same as `paginate/4`, but raises an error for invalid input.
+  Same as `paginate/3`, but raises an error for invalid input.
   """
   def paginate!(queryable, query_name, opts) do
     case paginate(queryable, query_name, opts) do
@@ -42,12 +42,9 @@ defmodule Chunkr do
 
   ## Opts
 
-  * `:first`/`:after` — retrieves the next `n` results _after_ the supplied `:after` cursor. If no
-    cursor was specified, retrieves the first `n` results from the full set.
-  * `:last`/`:before` — retrieves the last `n` results leading _up to_ the supplied `:before`
-    cursor. If no cursor was specified, retrieves the last `n` results from the full set. This
-    enables paginating backward from the end of the results toward the beginning.
+  See `Chunkr.Opts`
   """
+
   def paginate(queryable, query_name, opts) do
     case Opts.new(queryable, query_name, opts) do
       {:ok, opts} ->

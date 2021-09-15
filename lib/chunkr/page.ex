@@ -15,15 +15,17 @@ defmodule Chunkr.Page do
     * `opts` — opts used.
   """
 
+  alias Chunkr.{Cursor, Opts, Page}
+
   @type record :: any()
 
   @type t :: %__MODULE__{
-          raw_results: [{Chunkr.Cursor.cursor_values(), record()}],
+          raw_results: [{Cursor.cursor_values(), record()}],
           has_previous_page: boolean(),
           has_next_page: boolean(),
-          start_cursor: Chunkr.Cursor.opaque_cursor() | nil,
-          end_cursor: Chunkr.Cursor.opaque_cursor() | nil,
-          opts: Chunkr.Opts.t()
+          start_cursor: Cursor.opaque_cursor() | nil,
+          end_cursor: Cursor.opaque_cursor() | nil,
+          opts: Opts.t()
         }
 
   @enforce_keys [
@@ -49,7 +51,7 @@ defmodule Chunkr.Page do
   Counting the total number of records requires an extra database query,
   so this is not performed by default.
   """
-  @spec total_count(Chunkr.Page.t()) :: integer()
+  @spec total_count(Page.t()) :: integer()
   def total_count(%__MODULE__{opts: opts}) do
     opts.repo.aggregate(opts.query, :count)
   end
@@ -57,7 +59,7 @@ defmodule Chunkr.Page do
   @doc """
   Extracts just the records out of the raw results.
   """
-  @spec records(Chunkr.Page.t()) :: [any()]
+  @spec records(Page.t()) :: [any()]
   def records(%__MODULE__{} = page) do
     Enum.map(page.raw_results, fn {_cursor_values, record} -> record end)
   end
@@ -65,10 +67,10 @@ defmodule Chunkr.Page do
   @doc """
   Returns opaque cursors with their corresponding records.
   """
-  @spec cursors_and_records(Chunkr.Page.t()) :: [{String.t(), any()}]
+  @spec cursors_and_records(Page.t()) :: [{Cursor.opaque_cursor(), any()}]
   def cursors_and_records(%__MODULE__{} = page) do
     Enum.map(page.raw_results, fn {cursor_values, record} ->
-      {Chunkr.Cursor.encode(cursor_values), record}
+      {Cursor.encode(cursor_values), record}
     end)
   end
 end
