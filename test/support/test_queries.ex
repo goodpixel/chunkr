@@ -7,30 +7,35 @@ defmodule Chunkr.TestQueries do
   end
 
   paginate_by :two_fields do
-    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
+    sort :asc, fragment("coalesce(?, '~~~~~')", as(:user).last_name)
     sort :desc, as(:user).id
   end
 
   paginate_by :three_fields do
-    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
-    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).first_name)
+    sort :asc, fragment("coalesce(?, '~~~~~')", as(:user).last_name)
+    sort :asc, fragment("coalesce(?, '~~~~~')", as(:user).first_name)
     sort :desc, as(:user).id
   end
 
   paginate_by :four_fields do
-    sort :desc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
-    sort :desc, fragment("lower(coalesce(?, 'zzz'))", as(:user).first_name)
-    sort :desc, fragment("lower(coalesce(?, 'zzz'))", as(:user).middle_name)
+    sort :desc, fragment("coalesce(?, '~~~~~')", as(:user).last_name)
+    sort :desc, fragment("coalesce(?, '~~~~~')", as(:user).first_name)
+    sort :desc, fragment("coalesce(?, '~~~~~')", as(:user).middle_name)
     sort :asc, as(:user).id
   end
 
   paginate_by :uuid do
-    sort :asc, fragment("lower(coalesce(?, 'zzz'))", as(:user).last_name)
+    sort :asc, fragment("coalesce(?, '~~~~~')", as(:user).last_name)
     sort :desc, as(:user).public_id, type: :binary_id
   end
 
   paginate_by :subquery do
-    sort :desc, fragment("coalesce(?, now() - interval '2000 years')", as(:phones).created_at)
+    sort :desc, as(:user).last_name
+    sort :asc, as(:user).id
+  end
+
+  paginate_by :computed_value do
+    sort :desc, as(:user_data).length_of_name
     sort :asc, as(:user).id
   end
 
@@ -41,16 +46,7 @@ defmodule Chunkr.TestQueries do
   # The essential thing we're looking for here is that phone numbers without an
   # associated user aren't inadvertently dropped from the paginated resut set.
   paginate_by :by_possibly_null_association do
-    sort :asc, fragment("lower(coalesce(?, ?))", as(:user).last_name, "zzz")
-    sort :asc, fragment("lower(coalesce(?, ?))", as(:user).first_name, "zzz")
-
-    sort :asc,
-         fragment(
-           "coalesce(regexp_replace(?, '[^0-9]+', '', 'g'), ?)",
-           as(:phone).number,
-           "999999999999999"
-         )
-
+    sort :asc, fragment("coalesce(?, ?)", as(:user).first_name, "~~~~~")
     sort :asc, as(:phone).id
   end
 end

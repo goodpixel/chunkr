@@ -2,8 +2,61 @@ defmodule Chunkr.PaginationHelpers do
   @moduledoc false
 
   use ExUnitProperties
-
+  import ExUnit.Assertions, only: [assert: 1]
   alias Chunkr.Page
+
+  def verify_pagination(repo, query, strategy, expected_results, expected_count) do
+    assert_paginates_forward(repo, query, strategy, expected_results, expected_count)
+    assert_paginates_backward(repo, query, strategy, expected_results, expected_count)
+    assert_page_size_and_metadata(repo, query, strategy, expected_count)
+  end
+
+  defp assert_paginates_forward(repo, query, strategy, expected_results, expected_count) do
+    check all limit <- positive_integer() do
+      paginated_results =
+        repo
+        |> page_thru(query, strategy, first: limit)
+        |> Enum.flat_map(fn page -> Page.records(page) end)
+
+      assert expected_count == length(paginated_results)
+      assert expected_results == paginated_results
+    end
+  end
+
+  defp assert_paginates_backward(repo, query, strategy, expected_results, expected_count) do
+    check all limit <- positive_integer() do
+      paginated_results =
+        repo
+        |> page_thru(query, strategy, last: limit)
+        |> Enum.reverse()
+        |> Enum.flat_map(fn page -> Page.records(page) end)
+
+      assert expected_count == length(paginated_results)
+      assert expected_results == paginated_results
+    end
+  end
+
+  defp assert_page_size_and_metadata(repo, query, strategy, expected_count) do
+    check all limit <- positive_integer(),
+              direction <- one_of([constant(:forward), constant(:backward)]) do
+      opts =
+        case direction do
+          :forward -> [first: limit]
+          :backward -> [last: limit]
+        end
+
+      final_page = final_page_number(expected_count, limit)
+
+      repo
+      |> page_thru(query, strategy, opts)
+      |> Stream.with_index(1)
+      |> Enum.each(fn {page, page_num} ->
+        assert has_previous_page?(direction, page_num, final_page) == page.has_previous_page
+        assert has_next_page?(direction, page_num, final_page) == page.has_next_page
+        assert page_size(page_num, expected_count, limit) == length(page.raw_results)
+      end)
+    end
+  end
 
   @doc """
   Streams pages for the entire result set starting with the given opts
@@ -38,88 +91,38 @@ defmodule Chunkr.PaginationHelpers do
     end)
   end
 
-  def user_attrs() do
-    gen all(
-          public_id <- uuid(),
-          first_name <- one_of([constant(nil), string(:ascii)]),
-          middle_name <- one_of([constant(nil), string(:ascii)]),
-          last_name <- one_of([constant(nil), string(:ascii)]),
-          inserted_at <- datetime(),
-          updated_at <- datetime()
-        ) do
-      %{
-        public_id: public_id,
-        first_name: first_name,
-        middle_name: middle_name,
-        last_name: last_name,
-        inserted_at: inserted_at,
-        updated_at: updated_at
-      }
+  defp page_size(_page_number, 0, _limit), do: 0
+
+  defp page_size(page_number, total, limit) do
+    final_page = final_page_number(total, limit)
+
+    if page_number == final_page do
+      final_page_size(total, limit)
+    else
+      limit
     end
   end
 
-  defp uuid() do
-    StreamData.map(StreamData.constant(nil), fn _ -> Ecto.UUID.generate() end)
-  end
+  defp final_page_number(total_count, limit), do: ceil(total_count / limit)
 
-  def phone_attrs() do
-    gen all(
-          number <- phone_number(),
-          inserted_at <- datetime(),
-          updated_at <- datetime()
-        ) do
-      %{
-        number: number,
-        inserted_at: inserted_at,
-        updated_at: updated_at
-      }
+  defp final_page_size(total_count, limit) do
+    case Integer.mod(total_count, limit) do
+      0 -> limit
+      leftover -> leftover
     end
   end
 
-  defp phone_number() do
-    gen all(
-          digits <- list_of(integer(0..9), min_length: 7, max_length: 13),
-          punctuation <- list_of(punctuation(), max_length: 6)
-        ) do
-      digits
-      |> Enum.concat(punctuation)
-      |> Enum.shuffle()
-      |> Enum.join()
-    end
-  end
+  # Note that when paginating backward from the end of the result set,
+  # page "1" is the first page we encounter and therefore represents the
+  # tail end of the full, unpaginated result set.
+  #
+  # Likewise, when paginating backward, the "final" page represents the
+  # beginning of the full, unpaginated result set.
+  defp has_previous_page?(:forward, 1, _last_page), do: false
+  defp has_previous_page?(:forward, _current_page, _last_page), do: true
+  defp has_previous_page?(:backward, current_page, last_page), do: current_page < last_page
 
-  defp punctuation() do
-    one_of([constant("."), constant("-"), constant("("), constant(")"), constant(" ")])
-  end
-
-  @microseconds_per_year 365 * 24 * 60 * 60 * 1000 * 1000
-
-  # generates a date between 1,000 years ago and 1,000 years from now
-  defp datetime() do
-    now = DateTime.utc_now()
-
-    earliest =
-      DateTime.add(now, -1_000 * @microseconds_per_year, :microsecond)
-      |> DateTime.to_unix(:microsecond)
-
-    latest =
-      DateTime.add(now, 1_000 * @microseconds_per_year, :microsecond)
-      |> DateTime.to_unix(:microsecond)
-
-    gen all(int <- integer(earliest..latest)) do
-      DateTime.from_unix!(int, :microsecond)
-    end
-  end
-
-  def maybe_assign_user_ids(attrs, [] = _user_ids), do: attrs
-
-  def maybe_assign_user_ids(attrs, user_ids) when length(user_ids) > 0 do
-    for {attrs, index} <- Enum.with_index(attrs) do
-      if Integer.mod(index, 2) == 0 do
-        Map.put(attrs, :user_id, Enum.random(user_ids))
-      else
-        attrs
-      end
-    end
-  end
+  defp has_next_page?(:forward, current_page, last_page), do: current_page < last_page
+  defp has_next_page?(:backward, 1, _last_page), do: false
+  defp has_next_page?(:backward, _current_page, _last_page), do: true
 end
