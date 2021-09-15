@@ -16,7 +16,6 @@ defmodule Chunkr.MixProject do
       deps: deps(),
       name: @name,
       source_url: "https://github.com/goodpixel/chunkr",
-      # homepage_url: "http://YOUR_PROJECT_HOMEPAGE",
       docs: docs()
     ]
   end
@@ -56,8 +55,8 @@ defmodule Chunkr.MixProject do
 
   defp docs do
     [
-      main: @name
-      # logo: "path/to/logo.png",
+      main: @name,
+      logo: "assets/logo-s.svg",
     ]
   end
 end
