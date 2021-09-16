@@ -5,7 +5,6 @@ defmodule Chunkr do
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
-  require Ecto.Query
   alias Chunkr.{Cursor, Opts, Page}
 
   @default_max_limit 100
@@ -39,11 +38,11 @@ defmodule Chunkr do
   @spec paginate(any, any, Chunkr.Opts.sort_dir(), keyword) ::
           {:error, String.t()} | {:ok, Chunkr.Page.t()}
   @doc """
-  Paginates an `Ecto.Queryable`.
+  Paginates a query.
 
-  Extends the provided `Ecto.Queryable` with the necessary filtering, ordering, and cursor field
-  selection for the sake of pagination, then executes the query and returns a `Chunkr.Page` or
-  results.
+  Extends the provided query with the necessary filtering, ordering, and cursor field
+  selection for the sake of pagination, then executes the query and returns a `Chunkr.Page`
+  or results.
 
   ## Options
 
@@ -62,7 +61,7 @@ defmodule Chunkr do
           |> apply_where(opts)
           |> apply_order(opts)
           |> apply_select(opts)
-          |> apply_limit(opts.limit + 1)
+          |> apply_limit(opts.limit + 1, opts)
           |> opts.repo.all()
 
         requested_rows = Enum.take(extended_rows, opts.limit)
@@ -76,8 +75,8 @@ defmodule Chunkr do
         {:ok,
          %Page{
            raw_results: rows_to_return,
-           has_previous_page: has_previous?(opts, extended_rows, requested_rows),
-           has_next_page: has_next?(opts, extended_rows, requested_rows),
+           has_previous_page: has_previous_page?(opts, extended_rows, requested_rows),
+           has_next_page: has_next_page?(opts, extended_rows, requested_rows),
            start_cursor: List.first(rows_to_return) |> row_to_cursor(),
            end_cursor: List.last(rows_to_return) |> row_to_cursor(),
            opts: opts
@@ -88,11 +87,11 @@ defmodule Chunkr do
     end
   end
 
-  defp has_previous?(%{paging_dir: :forward} = opts, _, _), do: !!opts.cursor
-  defp has_previous?(%{paging_dir: :backward}, rows, requested_rows), do: rows != requested_rows
+  defp has_previous_page?(%{paging_dir: :forward} = opts, _, _), do: !!opts.cursor
+  defp has_previous_page?(%{paging_dir: :backward}, rows, requested_rows), do: rows != requested_rows
 
-  defp has_next?(%{paging_dir: :forward}, rows, requested_rows), do: rows != requested_rows
-  defp has_next?(%{paging_dir: :backward} = opts, _, _), do: !!opts.cursor
+  defp has_next_page?(%{paging_dir: :forward}, rows, requested_rows), do: rows != requested_rows
+  defp has_next_page?(%{paging_dir: :backward} = opts, _, _), do: !!opts.cursor
 
   defp row_to_cursor(nil), do: nil
   defp row_to_cursor({cursor_values, _record}), do: Cursor.encode(cursor_values)
@@ -119,8 +118,7 @@ defmodule Chunkr do
     opts.planner.apply_select(query, opts.strategy)
   end
 
-  # TODO: Move this
-  defp apply_limit(query, limit) do
-    Ecto.Query.limit(query, ^limit)
+  defp apply_limit(query, limit, opts) do
+    opts.planner.apply_limit(query, limit)
   end
 end

@@ -71,6 +71,10 @@ defmodule Chunkr.PaginationPlanner do
     quote do
       import unquote(__MODULE__)
       require Ecto.Query
+
+      def apply_limit(query, limit) do
+        Ecto.Query.limit(query, ^limit)
+      end
     end
   end
 
