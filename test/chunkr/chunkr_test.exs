@@ -217,14 +217,14 @@ defmodule ChunkrTest do
 
   defmodule OtherRepo do
     use Chunkr,
-      queries: Chunkr.TestQueries,
+      planner: Chunkr.TestPaginationPlanner,
       max_limit: 123_456
 
     def all(_queryable), do: []
   end
 
-  defmodule MoreStrategies do
-    use Chunkr.PaginatedQueries
+  defmodule AnotherPaginationPlanner do
+    use Chunkr.PaginationPlanner
 
     paginate_by :another_strategy do
       sort :asc, as(:user).id
@@ -235,7 +235,7 @@ defmodule ChunkrTest do
     test "respects config provided to `use Chunkr`" do
       assert %Page{
                opts: %{
-                 queries: Chunkr.TestQueries,
+                 planner: Chunkr.TestPaginationPlanner,
                  max_limit: 123_456
                }
              } =
@@ -250,7 +250,7 @@ defmodule ChunkrTest do
     test "allows config to be overridden on the fly" do
       assert %Page{
                opts: %{
-                 queries: MoreStrategies,
+                 planner: AnotherPaginationPlanner,
                  max_limit: 999_999
                }
              } =
@@ -259,7 +259,7 @@ defmodule ChunkrTest do
                  :another_strategy,
                  :asc,
                  first: 10,
-                 queries: MoreStrategies,
+                 planner: AnotherPaginationPlanner,
                  max_limit: 999_999
                )
     end

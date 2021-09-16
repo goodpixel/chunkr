@@ -1,9 +1,9 @@
-defmodule Chunkr.PaginatedQueries do
+defmodule Chunkr.PaginationPlanner do
   @moduledoc """
   Provides a set of macros for generating functions to assist with paginating queries. For example:
 
-      defmodule MyApp.PaginatedQueries do
-        use Chunkr.PaginatedQueries
+      defmodule MyApp.PaginationPlanner do
+        use Chunkr.PaginationPlanner
 
         paginate_by :user_created_at do
           sort :desc, as(:user).inserted_at

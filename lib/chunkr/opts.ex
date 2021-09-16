@@ -5,6 +5,7 @@ defmodule Chunkr.Opts do
   ## Fields
 
     * `:repo` — The `Ecto.Repo` for the query.
+    * `:planner` — The module implementing the pagination strategy.
     * `:query` — The non-paginated query to be extended for pagination purposes.
     * `:strategy` — The name of the pagination strategy to use.
     * `:sort_dir` — The primary sort direction used for the query. Note that this
@@ -20,7 +21,7 @@ defmodule Chunkr.Opts do
   """
   @type t :: %__MODULE__{
           repo: atom(),
-          queries: atom(),
+          planner: atom(),
           query: Ecto.Query.t(),
           strategy: atom(),
           sort_dir: :asc | :desc,
@@ -32,7 +33,7 @@ defmodule Chunkr.Opts do
 
   defstruct [
     :repo,
-    :queries,
+    :planner,
     :query,
     :strategy,
     :sort_dir,
@@ -55,7 +56,7 @@ defmodule Chunkr.Opts do
       {:ok,
        %{
          repo: Keyword.fetch!(opts, :repo),
-         queries: Keyword.fetch!(opts, :queries),
+         planner: Keyword.fetch!(opts, :planner),
          strategy: strategy,
          paging_dir: paging_direction,
          max_limit: Keyword.fetch!(opts, :max_limit),

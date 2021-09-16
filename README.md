@@ -64,8 +64,8 @@ end
 ### 1. Set up your pagination strategies…
 
 ```elixir
-defmodule MyApp.PaginatedQueries do
-  use Chunkr.PaginatedQueries
+defmodule MyApp.PaginationPlanner do
+  use Chunkr.PaginationPlanner
 
   paginate_by :account_creation_date do
     sort :desc, as(:user).inserted_at
@@ -107,7 +107,7 @@ defmodule MyApp.Repo do
     otp_app: :my_app,
     adapter: Ecto.Adapters.Postgres
 
-  use Chunkr, queries: MyApp.PaginatedQueries
+  use Chunkr, planner: MyApp.PaginationPlanner
 end
 ```
 

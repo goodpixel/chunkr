@@ -11,7 +11,7 @@ defmodule Chunkr.PageTest do
   end
 
   defp fake_page() do
-    opts = %Opts{repo: MockRepo, queries: SomeModule, query: User}
+    opts = %Opts{repo: MockRepo, planner: SomeModule, query: User}
 
     %Page{
       raw_results: [{[:cursor_val_1], :foo_record}, {[:cursor_val_2], :bar_record}],

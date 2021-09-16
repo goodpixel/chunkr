@@ -99,7 +99,7 @@ defmodule Chunkr do
   defp apply_where(query, opts) do
     cursor_values = Cursor.decode!(opts.cursor)
 
-    opts.queries.beyond_cursor(
+    opts.planner.beyond_cursor(
       query,
       opts.strategy,
       opts.sort_dir,
@@ -109,11 +109,11 @@ defmodule Chunkr do
   end
 
   defp apply_order(query, opts) do
-    opts.queries.apply_order(query, opts.strategy, opts.sort_dir, opts.paging_dir)
+    opts.planner.apply_order(query, opts.strategy, opts.sort_dir, opts.paging_dir)
   end
 
   defp apply_select(query, opts) do
-    opts.queries.apply_select(query, opts.strategy)
+    opts.planner.apply_select(query, opts.strategy)
   end
 
   # TODO: Move this

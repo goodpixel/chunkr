@@ -18,5 +18,5 @@ defmodule Chunkr.TestRepo do
     {:ok, Keyword.merge(config, test_config)}
   end
 
-  use Chunkr, queries: Chunkr.TestQueries
+  use Chunkr, planner: Chunkr.TestPaginationPlanner
 end

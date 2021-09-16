@@ -1,6 +1,6 @@
-defmodule Chunkr.TestQueries do
+defmodule Chunkr.TestPaginationPlanner do
   @moduledoc false
-  use Chunkr.PaginatedQueries
+  use Chunkr.PaginationPlanner
 
   paginate_by :single_field do
     sort :asc, as(:user).id

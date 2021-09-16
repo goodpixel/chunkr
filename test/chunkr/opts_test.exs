@@ -17,7 +17,7 @@ defmodule Chunkr.OptsTest do
               }} =
                Opts.new(User, :first_name, :asc,
                  repo: TestRepo,
-                 queries: QueriesModule,
+                 planner: PlannerModule,
                  first: 101,
                  max_limit: 200
                )
@@ -35,7 +35,7 @@ defmodule Chunkr.OptsTest do
               }} =
                Opts.new(User, :first_name, :desc,
                  repo: TestRepo,
-                 queries: QueriesModule,
+                 planner: PlannerModule,
                  first: 101,
                  after: "abc123",
                  max_limit: 200
@@ -54,7 +54,7 @@ defmodule Chunkr.OptsTest do
               }} =
                Opts.new(User, :middle_name, :asc,
                  repo: TestRepo,
-                 queries: QueriesModule,
+                 planner: PlannerModule,
                  last: 99,
                  max_limit: 100
                )
@@ -72,7 +72,7 @@ defmodule Chunkr.OptsTest do
               }} =
                Opts.new(User, :middle_name, :asc,
                  repo: TestRepo,
-                 queries: QueriesModule,
+                 planner: PlannerModule,
                  last: 99,
                  before: "def456",
                  max_limit: 100
@@ -87,13 +87,13 @@ defmodule Chunkr.OptsTest do
     end
 
     test "requesting a negative number of rows in an `{:invalid_opts, message}` error" do
-      opts = [repo: TestRepo, queries: QueriesModule, max_limit: 100]
+      opts = [repo: TestRepo, planner: PlannerModule, max_limit: 100]
       assert {:invalid_opts, _} = Opts.new(User, :strategy, :asc, [{:first, -1} | opts])
       assert {:ok, _} = Opts.new(User, :strategy, :asc, [{:first, 0} | opts])
     end
 
     test "requesting too many rows results in an `{:invalid_opts, message}` error" do
-      opts = [repo: TestRepo, queries: QueriesModule, max_limit: 5]
+      opts = [repo: TestRepo, planner: PlannerModule, max_limit: 5]
 
       assert {:invalid_opts, _} = Opts.new(User, :strategy, :asc, [{:first, 6} | opts])
       assert {:ok, _} = Opts.new(User, :strategy, :asc, [{:first, 5} | opts])
@@ -103,7 +103,7 @@ defmodule Chunkr.OptsTest do
     end
 
     test "when the same key is present multiple times it uses the first one added" do
-      opts = [repo: TestRepo, queries: QueriesModule, first: 101, max_limit: 100]
+      opts = [repo: TestRepo, planner: PlannerModule, first: 101, max_limit: 100]
 
       assert {:invalid_opts, _} = Opts.new(User, :strategy, :asc, opts)
       assert {:invalid_opts, _} = Opts.new(User, :strategy, :asc, opts ++ [{:max_limit, 101}])
