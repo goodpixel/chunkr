@@ -25,8 +25,9 @@ defmodule Chunkr do
     end
   end
 
+  @spec paginate!(any, atom(), Chunkr.Opts.sort_dir(), keyword) :: Chunkr.Page.t()
   @doc """
-  Same as `paginate/3`, but raises an error for invalid input.
+  Same as `paginate/4`, but raises an error for invalid input.
   """
   def paginate!(queryable, strategy, sort_dir, opts) do
     case paginate(queryable, strategy, sort_dir, opts) do
@@ -35,6 +36,8 @@ defmodule Chunkr do
     end
   end
 
+  @spec paginate(any, any, Chunkr.Opts.sort_dir(), keyword) ::
+          {:error, String.t()} | {:ok, Chunkr.Page.t()}
   @doc """
   Paginates an `Ecto.Queryable`.
 

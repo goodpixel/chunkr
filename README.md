@@ -111,7 +111,7 @@ defmodule MyApp.Repo do
 end
 ```
 
-This adds the convenience functions `paginate/3` and `paginate!/3` to your Repo.
+This adds the convenience functions `paginate/4` and `paginate!/4` to your Repo.
 
 ### 3. Paginate your queries!
 

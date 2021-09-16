@@ -19,12 +19,15 @@ defmodule Chunkr.Opts do
     * `:max_limit` — The maximum allowed page size.
     * `:limit` — The requested page size (as specified by `:first` or `:last`).
   """
+
+  @type sort_dir :: :asc | :desc
+
   @type t :: %__MODULE__{
           repo: atom(),
           planner: atom(),
           query: Ecto.Query.t(),
           strategy: atom(),
-          sort_dir: :asc | :desc,
+          sort_dir: sort_dir(),
           paging_dir: :forward | :backward,
           cursor: Chunkr.Cursor.opaque_cursor() | nil,
           max_limit: pos_integer(),
