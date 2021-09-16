@@ -46,6 +46,10 @@ defmodule Chunkr.Opts do
     :limit
   ]
 
+  @spec new(any, any, sort_dir, keyword) :: {:invalid_opts, String.t()} | {:ok, struct}
+  @doc """
+  Validate provided options and return a `Chunkr.Opts` struct
+  """
   def new(query, strategy, sort_dir, opts) do
     case validate_options(strategy, opts) do
       {:ok, opts} -> {:ok, struct!(%__MODULE__{query: query, sort_dir: sort_dir}, opts)}

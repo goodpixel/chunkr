@@ -7,19 +7,17 @@ defmodule Chunkr do
 
   alias Chunkr.{Cursor, Opts, Page}
 
-  @default_max_limit 100
-
   @doc false
   defmacro __using__(opts) do
     quote do
-      @default_opts unquote(opts) ++ [{:repo, __MODULE__}, {:max_limit, 100}]
+      @default_chunkr_opts unquote(opts) ++ [{:repo, __MODULE__}, {:max_limit, 100}]
 
       def paginate!(queryable, strategy, sort_dir, opts) do
-        unquote(__MODULE__).paginate!(queryable, strategy, sort_dir, opts ++ @default_opts)
+        unquote(__MODULE__).paginate!(queryable, strategy, sort_dir, opts ++ @default_chunkr_opts)
       end
 
       def paginate(queryable, strategy, sort_dir, opts) do
-        unquote(__MODULE__).paginate(queryable, strategy, sort_dir, opts ++ @default_opts)
+        unquote(__MODULE__).paginate(queryable, strategy, sort_dir, opts ++ @default_chunkr_opts)
       end
     end
   end
@@ -88,7 +86,9 @@ defmodule Chunkr do
   end
 
   defp has_previous_page?(%{paging_dir: :forward} = opts, _, _), do: !!opts.cursor
-  defp has_previous_page?(%{paging_dir: :backward}, rows, requested_rows), do: rows != requested_rows
+
+  defp has_previous_page?(%{paging_dir: :backward}, rows, requested_rows),
+    do: rows != requested_rows
 
   defp has_next_page?(%{paging_dir: :forward}, rows, requested_rows), do: rows != requested_rows
   defp has_next_page?(%{paging_dir: :backward} = opts, _, _), do: !!opts.cursor
