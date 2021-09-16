@@ -6,12 +6,15 @@ defmodule ChunkrTest do
 
   doctest Chunkr
 
-  alias Chunkr.{PhoneNumber, TestRepo, User}
+  alias Chunkr.{Page, PhoneNumber, TestRepo, User}
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Chunkr.TestRepo)
   end
 
+  #
+  # PROPERTY-BASED TESTS
+  #
   @count 30
 
   test "paginating by a single field" do
@@ -208,13 +211,66 @@ defmodule ChunkrTest do
     )
   end
 
+  #
+  # EXAMPLE-BASED TESTS
+  #
 
+  defmodule OtherRepo do
+    use Chunkr,
+      queries: Chunkr.TestQueries,
+      max_limit: 123_456
+
+    def all(_queryable), do: []
+  end
+
+  defmodule MoreStrategies do
+    use Chunkr.PaginatedQueries
+
+    paginate_by :another_strategy do
+      sort :asc, as(:user).id
     end
   end
 
-  def maybe_assign_user_ids(attrs, [] = _user_ids), do: attrs
+  describe "opts" do
+    test "respects config provided to `use Chunkr`" do
+      assert %Page{
+               opts: %{
+                 queries: Chunkr.TestQueries,
+                 max_limit: 123_456
+               }
+             } =
+               OtherRepo.paginate!(
+                 from(u in User, as: :user),
+                 :single_field,
+                 :asc,
+                 first: 10
+               )
+    end
 
-  def maybe_assign_user_ids(attrs, user_ids) when length(user_ids) > 0 do
+    test "allows config to be overridden on the fly" do
+      assert %Page{
+               opts: %{
+                 queries: MoreStrategies,
+                 max_limit: 999_999
+               }
+             } =
+               OtherRepo.paginate!(
+                 from(u in User, as: :user),
+                 :another_strategy,
+                 :asc,
+                 first: 10,
+                 queries: MoreStrategies,
+                 max_limit: 999_999
+               )
+    end
+  end
+
+  #
+  # HELPERS
+  #
+  defp maybe_assign_user_ids(attrs, [] = _user_ids), do: attrs
+
+  defp maybe_assign_user_ids(attrs, user_ids) when length(user_ids) > 0 do
     for {attrs, index} <- Enum.with_index(attrs) do
       if Integer.mod(index, 2) == 0 do
         Map.put(attrs, :user_id, Enum.random(user_ids))

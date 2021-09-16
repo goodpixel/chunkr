@@ -13,7 +13,7 @@ defmodule Chunkr do
   @doc false
   defmacro __using__(opts) do
     quote do
-      @default_opts [{:repo, __MODULE__}, {:max_limit, 100} | unquote(opts)]
+      @default_opts unquote(opts) ++ [{:repo, __MODULE__}, {:max_limit, 100}]
 
       def paginate!(queryable, strategy, sort_dir, opts) do
         unquote(__MODULE__).paginate!(queryable, strategy, sort_dir, opts ++ @default_opts)
