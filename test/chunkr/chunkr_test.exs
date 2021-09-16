@@ -18,14 +18,28 @@ defmodule ChunkrTest do
     {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
     query = from(u in User, as: :user)
     expected_results = TestRepo.all(from(u in User, order_by: [asc: u.id]))
-    verify_pagination(TestRepo, query, :single_field, expected_results, @count)
+    verify_pagination(TestRepo, query, :single_field, :asc, expected_results, @count)
+  end
+
+  test "inverting a single field sort" do
+    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+    query = from(u in User, as: :user)
+    expected_results = TestRepo.all(from(u in User, order_by: [desc: u.id]))
+    verify_pagination(TestRepo, query, :single_field, :desc, expected_results, @count)
   end
 
   test "paginating by two fields" do
     {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
     query = from(u in User, as: :user)
     expected = TestRepo.all(from u in User, order_by: [asc_nulls_last: u.last_name, desc: u.id])
-    verify_pagination(TestRepo, query, :two_fields, expected, @count)
+    verify_pagination(TestRepo, query, :two_fields, :asc, expected, @count)
+  end
+
+  test "inverting a two field sort" do
+    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+    query = from(u in User, as: :user)
+    expected = TestRepo.all(from u in User, order_by: [desc_nulls_first: u.last_name, asc: u.id])
+    verify_pagination(TestRepo, query, :two_fields, :desc, expected, @count)
   end
 
   test "paginating by three fields" do
@@ -43,7 +57,25 @@ defmodule ChunkrTest do
         )
       )
 
-    verify_pagination(TestRepo, query, :three_fields, expected_results, @count)
+    verify_pagination(TestRepo, query, :three_fields, :asc, expected_results, @count)
+  end
+
+  test "inverting a three field sort" do
+    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+    query = from(u in User, as: :user)
+
+    expected_results =
+      TestRepo.all(
+        from(u in User,
+          order_by: [
+            desc_nulls_first: u.last_name,
+            desc_nulls_first: u.first_name,
+            asc: u.id
+          ]
+        )
+      )
+
+    verify_pagination(TestRepo, query, :three_fields, :desc, expected_results, @count)
   end
 
   test "paginating by four fields" do
@@ -62,7 +94,26 @@ defmodule ChunkrTest do
         )
       )
 
-    verify_pagination(TestRepo, query, :four_fields, expected_results, @count)
+    verify_pagination(TestRepo, query, :four_fields, :desc, expected_results, @count)
+  end
+
+  test "inverting a four field sort" do
+    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+    query = from(u in User, as: :user)
+
+    expected_results =
+      TestRepo.all(
+        from(u in User,
+          order_by: [
+            asc_nulls_last: u.last_name,
+            asc_nulls_last: u.first_name,
+            asc_nulls_last: u.middle_name,
+            desc: u.id
+          ]
+        )
+      )
+
+    verify_pagination(TestRepo, query, :four_fields, :asc, expected_results, @count)
   end
 
   test "paginating by UUID" do
@@ -72,7 +123,7 @@ defmodule ChunkrTest do
     expected_results =
       TestRepo.all(from u in User, order_by: [asc_nulls_last: u.last_name, desc: u.public_id])
 
-    verify_pagination(TestRepo, query, :uuid, expected_results, @count)
+    verify_pagination(TestRepo, query, :uuid, :asc, expected_results, @count)
   end
 
   test "paginating with a subquery" do
@@ -88,7 +139,7 @@ defmodule ChunkrTest do
     expected_count = TestRepo.aggregate(from(u in User, where: not is_nil(u.last_name)), :count)
     expected_results = TestRepo.all(from u in query, order_by: [desc: u.last_name, asc: u.id])
 
-    verify_pagination(TestRepo, query, :subquery, expected_results, expected_count)
+    verify_pagination(TestRepo, query, :subquery, :desc, expected_results, expected_count)
   end
 
   test "sorting via a computed value" do
@@ -117,7 +168,7 @@ defmodule ChunkrTest do
           ]
       )
 
-    verify_pagination(TestRepo, query, :computed_value, expected_results, @count)
+    verify_pagination(TestRepo, query, :computed_value, :desc, expected_results, @count)
   end
 
   test "sorting by a potentially-missing association" do
@@ -147,7 +198,14 @@ defmodule ChunkrTest do
           preload: [user: u]
       )
 
-    verify_pagination(TestRepo, query, :by_possibly_null_association, expected_results, @count)
+    verify_pagination(
+      TestRepo,
+      query,
+      :by_possibly_null_association,
+      :asc,
+      expected_results,
+      @count
+    )
   end
 
   # TEST DATA GENERATORS

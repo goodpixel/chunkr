@@ -4,44 +4,59 @@ defmodule Chunkr.Opts do
 
   ## Fields
 
+    * `:repo` — The `Ecto.Repo` for the query.
     * `:query` — The non-paginated query to be extended for pagination purposes.
-    * `:name` — The name of the pagination strategy.
-    * `:cursor` — The cursor beyond which results are retrieved.
-    * `:paging_dir` — Either `:forward` or `:backward` depending on whether we're paging from the
-      start of the result set toward the end or from the end of the result set toward the beginning.
-    * `:max_limit` — The maximum number of results the user can request per page.
-    * `:limit` — The number of results to actually query for this page. Must be between `0` and
-      `max_limit`.
+    * `:strategy` — The name of the pagination strategy to use.
+    * `:sort_dir` — The primary sort direction used for the query. Note that this
+      aligns with the very first `sort` clause registered in the named pagination strategy.
+      Any subsequent sort directions within the strategy will always be automatically
+      adjusted to maintain the overall strategy.
+    * `:paging_dir` — Either `:forward` or `:backward` depending on whether gathering
+      results from the start or the end of the result set (i.e. whether the limit was
+      specified as `:first` or `:last`).
+    * `:cursor` — The `:after` or `:before` cursor beyond which results are retrieved.
+    * `:max_limit` — The maximum allowed page size.
+    * `:limit` — The requested page size (as specified by `:first` or `:last`).
   """
   @type t :: %__MODULE__{
           repo: atom(),
           queries: atom(),
           query: Ecto.Query.t(),
-          name: atom(),
-          cursor: Chunkr.Cursor.opaque_cursor() | nil,
+          strategy: atom(),
+          sort_dir: :asc | :desc,
           paging_dir: :forward | :backward,
+          cursor: Chunkr.Cursor.opaque_cursor() | nil,
           max_limit: pos_integer(),
           limit: pos_integer()
         }
 
-  # @enforce_keys [:repo, :queries]
-  defstruct [:repo, :queries, :query, :name, :cursor, :paging_dir, :max_limit, :limit]
+  defstruct [
+    :repo,
+    :queries,
+    :query,
+    :strategy,
+    :sort_dir,
+    :paging_dir,
+    :cursor,
+    :max_limit,
+    :limit
+  ]
 
-  def new(query, query_name, opts) do
-    case validate_options(query_name, opts) do
-      {:ok, opts} -> {:ok, struct!(%__MODULE__{query: query}, opts)}
+  def new(query, strategy, sort_dir, opts) do
+    case validate_options(strategy, opts) do
+      {:ok, opts} -> {:ok, struct!(%__MODULE__{query: query, sort_dir: sort_dir}, opts)}
       {:error, message} -> {:invalid_opts, message}
     end
   end
 
-  defp validate_options(query_name, opts) do
+  defp validate_options(strategy, opts) do
     with {:ok, limit, cursor, paging_direction} <- validate(opts),
          {:ok, _limit} <- validate_limit(limit, opts) do
       {:ok,
        %{
          repo: Keyword.fetch!(opts, :repo),
          queries: Keyword.fetch!(opts, :queries),
-         name: query_name,
+         strategy: strategy,
          paging_dir: paging_direction,
          max_limit: Keyword.fetch!(opts, :max_limit),
          limit: limit,
