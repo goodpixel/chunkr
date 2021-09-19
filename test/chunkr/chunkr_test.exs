@@ -6,15 +6,12 @@ defmodule ChunkrTest do
 
   doctest Chunkr
 
-  alias Chunkr.{Page, PhoneNumber, TestRepo, User}
+  alias Chunkr.{PhoneNumber, TestRepo, User}
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Chunkr.TestRepo)
   end
 
-  #
-  # PROPERTY-BASED TESTS
-  #
   @count 30
 
   test "paginating by a single field" do
@@ -209,60 +206,6 @@ defmodule ChunkrTest do
       expected_results,
       @count
     )
-  end
-
-  #
-  # EXAMPLE-BASED TESTS
-  #
-
-  defmodule OtherRepo do
-    use Chunkr,
-      planner: Chunkr.TestPaginationPlanner,
-      max_limit: 123_456
-
-    def all(_queryable), do: []
-  end
-
-  defmodule AnotherPaginationPlanner do
-    use Chunkr.PaginationPlanner
-
-    paginate_by :another_strategy do
-      sort :asc, as(:user).id
-    end
-  end
-
-  describe "opts" do
-    test "respects config provided to `use Chunkr`" do
-      assert %Page{
-               opts: %{
-                 planner: Chunkr.TestPaginationPlanner,
-                 max_limit: 123_456
-               }
-             } =
-               OtherRepo.paginate!(
-                 from(u in User, as: :user),
-                 :single_field,
-                 :asc,
-                 first: 10
-               )
-    end
-
-    test "allows config to be overridden on the fly" do
-      assert %Page{
-               opts: %{
-                 planner: AnotherPaginationPlanner,
-                 max_limit: 999_999
-               }
-             } =
-               OtherRepo.paginate!(
-                 from(u in User, as: :user),
-                 :another_strategy,
-                 :asc,
-                 first: 10,
-                 planner: AnotherPaginationPlanner,
-                 max_limit: 999_999
-               )
-    end
   end
 
   #
