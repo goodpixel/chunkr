@@ -54,7 +54,7 @@ Add `chunkr` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:chunkr, "~> 0.1.0"}
+    {:chunkr, "~> 0.2.0"}
   ]
 end
 ```
