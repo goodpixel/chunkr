@@ -1,4 +1,4 @@
-defmodule TestDataGenerators do
+defmodule Chunkr.TestDataGenerators do
   @moduledoc false
   use ExUnitProperties
 

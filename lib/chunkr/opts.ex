@@ -1,6 +1,6 @@
 defmodule Chunkr.Opts do
   @moduledoc """
-  Options for paginating
+  Options for paginating.
 
   ## Fields
 

@@ -2,7 +2,7 @@ defmodule ChunkrTest do
   use ExUnit.Case, async: true
   import Ecto.Query
   import Chunkr.PaginationHelpers
-  import TestDataGenerators
+  import Chunkr.TestDataGenerators
 
   doctest Chunkr
 

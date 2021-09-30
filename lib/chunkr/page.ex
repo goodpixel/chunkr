@@ -12,7 +12,7 @@ defmodule Chunkr.Page do
     * `has_next_page` — whether or not there is a subsequent page of results.
     * `start_cursor` — a cursor representing the first record in this page of results.
     * `end_cursor` — a cursor representing the last record in this page of results.
-    * `opts` — opts used.
+    * `opts` — `Chunkr.Opts` used to generate this page of results.
   """
 
   alias Chunkr.{Cursor, Opts, Page}
