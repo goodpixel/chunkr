@@ -411,46 +411,21 @@ defmodule Chunkr.PaginationPlanner do
   end
 
   @doc false
-  def derive_operators([dir1]) do
-    [
-      comparison_operator(dir1)
-    ]
+  def derive_operators([single_sort_dir]), do: [comparison_operator(single_sort_dir)]
+
+  def derive_operators([dir1 | _rest] = multiple_sort_dirs) do
+    multiple_sort_dirs
+    |> Enum.with_index(1)
+    |> Enum.reduce(index_friendly_comparison_operator(dir1), fn {dir, sort_col_num}, operators ->
+      [operators, operators_for_sort_field(sort_col_num, dir)]
+    end)
+    |> List.flatten()
   end
 
-  def derive_operators([dir1, dir2]) do
+  defp operators_for_sort_field(sort_col_num, sort_col_dir) do
     [
-      index_friendly_comparison_operator(dir1),
-      comparison_operator(dir1),
-      :eq,
-      comparison_operator(dir2)
-    ]
-  end
-
-  def derive_operators([dir1, dir2, dir3]) do
-    [
-      index_friendly_comparison_operator(dir1),
-      comparison_operator(dir1),
-      :eq,
-      comparison_operator(dir2),
-      :eq,
-      :eq,
-      comparison_operator(dir3)
-    ]
-  end
-
-  def derive_operators([dir1, dir2, dir3, dir4]) do
-    [
-      index_friendly_comparison_operator(dir1),
-      comparison_operator(dir1),
-      :eq,
-      comparison_operator(dir2),
-      :eq,
-      :eq,
-      comparison_operator(dir3),
-      :eq,
-      :eq,
-      :eq,
-      comparison_operator(dir4)
+      List.duplicate(:eq, sort_col_num - 1),
+      comparison_operator(sort_col_dir)
     ]
   end
 
