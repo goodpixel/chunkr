@@ -33,38 +33,44 @@ defmodule Chunkr.Pagination do
   @spec paginate(any, atom(), Opts.sort_dir(), keyword) ::
           {:error, String.t()} | {:ok, Page.t()}
   def paginate(queryable, strategy, sort_dir, options) do
-    case Opts.new(queryable, strategy, sort_dir, options) do
-      {:ok, opts} ->
-        extended_rows =
-          queryable
-          |> apply_where(opts)
-          |> apply_order(opts)
-          |> apply_select(opts)
-          |> apply_limit(opts.limit + 1, opts)
-          |> opts.repo.all()
+    with {:ok, opts} <- Opts.new(queryable, strategy, sort_dir, options),
+         {:ok, queryable} <- validate_queryable(queryable) do
+      extended_rows =
+        queryable
+        |> apply_where(opts)
+        |> apply_order(opts)
+        |> apply_select(opts)
+        |> apply_limit(opts.limit + 1, opts)
+        |> opts.repo.all()
 
-        requested_rows = Enum.take(extended_rows, opts.limit)
+      requested_rows = Enum.take(extended_rows, opts.limit)
 
-        rows_to_return =
-          case opts.paging_dir do
-            :forward -> requested_rows
-            :backward -> Enum.reverse(requested_rows)
-          end
+      rows_to_return =
+        case opts.paging_dir do
+          :forward -> requested_rows
+          :backward -> Enum.reverse(requested_rows)
+        end
 
-        {:ok,
-         %Page{
-           raw_results: rows_to_return,
-           has_previous_page: has_previous_page?(opts, extended_rows, requested_rows),
-           has_next_page: has_next_page?(opts, extended_rows, requested_rows),
-           start_cursor: List.first(rows_to_return) |> row_to_cursor(),
-           end_cursor: List.last(rows_to_return) |> row_to_cursor(),
-           opts: opts
-         }}
-
+      {:ok,
+       %Page{
+         raw_results: rows_to_return,
+         has_previous_page: has_previous_page?(opts, extended_rows, requested_rows),
+         has_next_page: has_next_page?(opts, extended_rows, requested_rows),
+         start_cursor: List.first(rows_to_return) |> row_to_cursor(),
+         end_cursor: List.last(rows_to_return) |> row_to_cursor(),
+         opts: opts
+       }}
+    else
       {:invalid_opts, message} ->
         {:error, message}
+
+      {:invalid_query, :already_ordered} ->
+        {:error, "Query must not already be ordered since ordering will be applied by Chunkr"}
     end
   end
+
+  defp validate_queryable(%Ecto.Query{order_bys: [_ | _]}), do: {:invalid_query, :already_ordered}
+  defp validate_queryable(query), do: {:ok, query}
 
   @doc """
   Same as `paginate/4`, but raises an error for invalid input.

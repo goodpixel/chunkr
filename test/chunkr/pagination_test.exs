@@ -1,14 +1,21 @@
-
 defmodule Chunkr.PaginationTest do
   use ExUnit.Case, async: true
   import Ecto.Query
 
   doctest Chunkr.Pagination
 
-  alias Chunkr.{Page, User}
+  alias Chunkr.{Page, TestRepo, User}
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Chunkr.TestRepo)
+  end
+
+  describe "Chunkr.Pagination.paginate/4" do
+    test "with a query that already has ordering specified" do
+      query = from(u in User, as: :user, order_by: [desc: u.id])
+      {:error, message} = TestRepo.paginate(query, :single_field, :asc, first: 10)
+      assert String.match?(message, ~r/must not already be ordered/)
+    end
   end
 
   defmodule OtherRepo do
@@ -60,5 +67,4 @@ defmodule Chunkr.PaginationTest do
                )
     end
   end
-
 end
