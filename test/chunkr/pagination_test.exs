@@ -30,34 +30,34 @@ defmodule Chunkr.PaginationTest do
   describe "opts" do
     test "respects config provided to `use Chunkr`" do
       assert %Page{
-              opts: %{
-                planner: Chunkr.TestPaginationPlanner,
-                max_limit: 123_456
-              }
-            } =
-              OtherRepo.paginate!(
-                from(u in User, as: :user),
-                :single_field,
-                :asc,
-                first: 10
-              )
+               opts: %{
+                 planner: Chunkr.TestPaginationPlanner,
+                 max_limit: 123_456
+               }
+             } =
+               OtherRepo.paginate!(
+                 from(u in User, as: :user),
+                 :single_field,
+                 :asc,
+                 first: 10
+               )
     end
 
     test "allows config to be overridden on the fly" do
       assert %Page{
-              opts: %{
-                planner: AnotherPaginationPlanner,
-                max_limit: 999_999
-              }
-            } =
-              OtherRepo.paginate!(
-                from(u in User, as: :user),
-                :another_strategy,
-                :asc,
-                first: 10,
-                planner: AnotherPaginationPlanner,
-                max_limit: 999_999
-              )
+               opts: %{
+                 planner: AnotherPaginationPlanner,
+                 max_limit: 999_999
+               }
+             } =
+               OtherRepo.paginate!(
+                 from(u in User, as: :user),
+                 :another_strategy,
+                 :asc,
+                 first: 10,
+                 planner: AnotherPaginationPlanner,
+                 max_limit: 999_999
+               )
     end
   end
 
