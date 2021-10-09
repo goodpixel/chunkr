@@ -16,13 +16,14 @@ defmodule Chunkr.PaginationPlanner do
         end
       end
 
-  The `paginate_by/1` macro above takes a query name and sets up the necessary `beyond_cursor/4`,
+  The `paginate_by/2` macro above takes a query name and sets up the necessary `beyond_cursor/4`,
   `apply_order/4`, and `apply_select/2` functions based on the number of sort options passed in the
   block as well as the sort directions specified.
 
-  Each call to `sort/3` must include the sort direction, the field to be sorted, and an optional
-  `:type` keyword. If `:type` is provided, the cursor value will be cast as that type for the
-  sake of comparisons. See Ecto.Query.API.type/2.
+  Each call to `sort/3` must include the sort direction (`:asc` or `:desc`), any valid Ecto fragment
+  or field (using [`:as`](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings)), and an
+  optional [`:type`](https://hexdocs.pm/ecto/3.7.1/Ecto.Query.API.html#type/2) keyword.
+  If `:type` is provided, the cursor value will be cast as that type for the sake of comparisons.
 
   ## Ordering
 
@@ -55,15 +56,14 @@ defmodule Chunkr.PaginationPlanner do
   like ordering by `NULLS LAST` because the filtering of values up to the cursor values will use
   comparison operators—which will cause records with relevant NULL values to be dropped entirely.
 
-  The following `fragment` example sets up names to be compared in a case-insensitive fashion
-  and places records with a `NULL` name at the end of the list (assuming no names will sort beyond
-  "zzz"!).
+  The following `fragment` places records with a `NULL` name column at the end of the list
+  (assuming no names exist beyond "zzz").
 
-      sort :asc, fragment("lower(coalesce(?, 'zzz')"), as(:user).name).inserted_at
+      sort :asc, fragment("coalesce(?, 'zzz')", as(:user).name)
 
   ## Limitations
 
-  _Note that Chunkr limits the number of `sort` clauses to 4._
+  Chunkr limits the number of `sort` clauses to 4.
   """
 
   @doc false

@@ -23,5 +23,6 @@ defmodule Chunkr do
     end
   end
 
+  @doc false
   def default_max_limit(), do: @default_max_limit
 end

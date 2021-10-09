@@ -10,6 +10,10 @@ defmodule Chunkr.Pagination do
   `use Chunkr.PaginationPlanner`, which provides macros to automically implement the
   functions necessary to extend your original query with Ecto-based filtering, sorting,
   limiting, and field selection.
+
+  Note that you'll generally want to call `paginate/4` or `paginate!/4` on your Repo module and
+  not directly on this module. That way, you'll automatically inherit any configuration defaults
+  established in your call to `use Chunkr`.
   """
 
   alias Chunkr.{Cursor, Opts, Page}
