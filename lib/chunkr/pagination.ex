@@ -3,7 +3,7 @@ defmodule Chunkr.Pagination do
   Generic pagination functions.
 
   This module provides generic pagination functions that are not specific to Ecto.
-  Under-the-hood, they delegate to whatever `:planner` is configured in the call to
+  Under the hood, they delegate to whatever `:planner` is configured in the call to
   `use Chunkr, planner: YourApp.PaginationPlanner`.
 
   The expected usage is that the module referenced by the `:planner` opt will itself
@@ -11,28 +11,35 @@ defmodule Chunkr.Pagination do
   functions necessary to extend your original query with Ecto-based filtering, sorting,
   limiting, and field selection.
 
-  Note that you'll generally want to call `paginate/4` or `paginate!/4` on your Repo module and
-  not directly on this module. That way, you'll automatically inherit any configuration defaults
-  established in your call to `use Chunkr`.
+  Note that you'll generally want to call the `paginate/4` or `paginate!/4` convenience
+  functions on your Repo module and not directly on this module. That way, you'll
+  automatically inherit any configuration provided in your call to `use Chunkr`.
   """
 
   alias Chunkr.{Cursor, Opts, Page}
 
   @doc """
-  Paginates a query.
+  Paginates a query in `sort_dir` using your predefined `strategy`.
 
-  Extends the provided query with the necessary filtering, ordering, and cursor field
-  selection for the sake of pagination, then executes the query and returns a `Chunkr.Page`
-  of results.
+  The `sort_dir` you specify aligns with the primary sort direction of your pagination strategy.
+  However, you can also provide the inverse sort direction from what your pagination strategy
+  specifies, and the entire sort strategy will automically be inverted.
+
+  The query _must not_ be ordered before calling `paginate/4` as the proper ordering will be
+  automatically applied per the registered strategy.
 
   ## Options
 
-    * `:max_limit` — The maximum number of results the user can request for this query.
-      The default is #{Chunkr.default_max_limit()}.
     * `:first` — Retrieve the first _n_ results; must be between `0` and `:max_limit`.
     * `:last` — Retrieve the last _n_ results; must be between `0` and `:max_limit`.
     * `:after` — Return results starting after the provided cursor; optionally pairs with `:first`.
     * `:before` — Return results ending at the provided cursor; optionally pairs with `:last`.
+    * `:max_limit` — Maximum number of results the user can request for this query.
+      Default is #{Chunkr.default_max_limit()}.
+    * `:repo` — Repo to use for querying (automatically passed when calling either of
+      the paginate convenience functions on your Repo).
+    * `:planner` — The module implementing your pagination strategy (automatically passed
+      when calling either of the paginate convenience functions on your Repo).
   """
   @spec paginate(any, atom(), Opts.sort_dir(), keyword) ::
           {:error, String.t()} | {:ok, Page.t()}
@@ -69,7 +76,7 @@ defmodule Chunkr.Pagination do
         {:error, message}
 
       {:invalid_query, :already_ordered} ->
-        {:error, "Query must not already be ordered since ordering will be applied by Chunkr"}
+        {:error, "Query must not be ordered prior to paginating with Chunkr"}
     end
   end
 

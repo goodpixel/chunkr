@@ -1,65 +1,84 @@
 defmodule Chunkr.PaginationPlanner do
   @moduledoc """
-  Provides a set of macros for generating functions to assist with paginating queries. For example:
+  Macros for establishing your pagination strategies.
+
+  For example:
 
       defmodule MyApp.PaginationPlanner do
         use Chunkr.PaginationPlanner
 
-        paginate_by :user_created_at do
-          sort :desc, as(:user).inserted_at
-          sort :desc, as(:user).id, type: :binary_id
+        # Sort by a single column.
+        paginate_by :username do
+          sort :asc, as(:user).username
         end
 
-        paginate_by :user_name do
-          sort :asc, fragment("lower(coalesce(?, 'zzz')"), as(:user).name).inserted_at
-          sort :desc, as(:user).id, type: :binary_id
+        # Sort by DESC `user.inserted_at`, with ASC `user.id` as a tiebreaker.
+        # In this case, `user.id` is explicitly called out as a UUID.
+        paginate_by :user_created_at do
+          sort :desc, as(:user).inserted_at
+          sort :asc, as(:user).id, type: :binary_id
+        end
+
+        # Sort names in ASC order.
+        # Coalesce any `NULL` name values so they're at the end of the result set.
+        # Use `user.id` as the tiebreaker.
+        paginate_by :last_name do
+          sort :asc, fragment("coalesce(?, 'zzz')", as(:user).last_name)
+          sort :asc, fragment("coalesce(?, 'zzz')", as(:user).first_name)
+          sort :desc, as(:user).id
         end
       end
 
-  The `paginate_by/2` macro above takes a query name and sets up the necessary `beyond_cursor/4`,
-  `apply_order/4`, and `apply_select/2` functions based on the number of sort options passed in the
-  block as well as the sort directions specified.
+  The `paginate_by/2` macro above takes a name for the pagination strategy along with the
+  fields to sort by in their desired order. The fields can be actual table columns or
+  dynamically-generated values via Ecto fragments. Fragments are especially handy for
+  implementing case-insensitive sorts, coalescing `NULL` values, and so forth.
 
-  Each call to `sort/3` must include the sort direction (`:asc` or `:desc`), any valid Ecto fragment
+  Each call to `sort` requires a sort direction (`:asc` or `:desc`), any valid Ecto fragment
   or field (using [`:as`](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings)), and an
   optional [`:type`](https://hexdocs.pm/ecto/3.7.1/Ecto.Query.API.html#type/2) keyword.
-  If `:type` is provided, the cursor value will be cast as that type for the sake of comparisons.
+  If `:type` is provided, the relevant cursor value will be cast to that type when filtering records.
+
+  The result of registering these pagination strategies is that, at compile time, Chunkr
+  automatically defines the functions necessary to take future queries and extend them for
+  your desired pagination strategies. This involves dynamically implementing functions to sort,
+  filter, and limit your queries according to these strategies as well as functions to select
+  both the fields needed for the cursor as well as the records themselves.
 
   ## Ordering
 
-  In keyset-based pagination, it is essential that results are deterministically ordered, otherwise
-  you may see unexpected results. Therefore, the final column used for sorting must _always_ be
-  unique and non-NULL.
-
-  Ordering of paginated results can be based on columns from the primary table, any joined table,
-  any subquery, or any dynamically computed value based on other fields. Regardless of where the
-  column resides, named bindings are always required…
+  It is essential that your results are deterministically ordered, otherwise you will see
+  unexpected results. Therefore, the final column used for sorting (i.e. the ultimate tie-breaker)
+  must _always_ be unique and non-NULL.
 
   ## Named bindings
 
-  Because these `sort/3` clauses must reference bindings that have not yet been established, each
-  sort clause must use `:as` to take advantage of late binding. A parallel `:as` must then be used
-  within the query that gets passed to `Chunkr.Pagination.paginate/4` or the query will fail. See
-  [Ecto Named bindings](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings) for more.
+  Because these sort clauses must reference bindings that have not yet been established,
+  we use [`:as`](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings)
+  to take advantage of Ecto's late binding. The column referenced by `:as` must then be
+  explicitly provided within your query or it fail.
 
-  ## NULL values in sort fields
+  ## Always coalesce `NULL` values!
 
-  When using comparison operators in SQL, records involving comparisons against `NULL` get dropped.
-  This is generally undesirable for pagination, as the goal is usually to work your way through an
-  entire result set in chunks—not just through the part of the result set that doesn't have NULL
-  values in the important fields. For example, when sorting users by [last name, first name,
-  middle name], you most likely don't want to exclude users without a known middle name.
+  SQL cannot reasonably compare `NULL` to a non-`NULL` value using operators like `<` and `>`.
+  However, when filtering records against our cursor values, it's not uncommon to find ourselves
+  in a situation where our sorted fields may include `NULL` values. Without intervention, any
+  records that contain a `NULL` value in one of the sort fields would be entirely dropped from the
+  result set, which is almost surely _not_ the intention.
 
   To work around this awkwardness, you'll need to pick a value that is almost sure to come before
   or after the rest of your results (depending on whether you want `NULL` values to sort to the
-  beginning or the end of your results). It's not good enough to think you can simply use a strategy
-  like ordering by `NULLS LAST` because the filtering of values up to the cursor values will use
-  comparison operators—which will cause records with relevant NULL values to be dropped entirely.
+  beginning or the end of your results respectively) and coalesce any `NULL` values in sorted
+  fields so that these records sort to the desired location. With keyset-based pagination,
+  it's not enough to use a strategy like ordering by `NULLS LAST` or `NULLS FIRST`.
+  Remember, it's not the ordering itself where this is problematic; it's the efficient filtering
+  of records (via comparison to a cursor) where records with `NULL` values would get dropped.
 
-  The following `fragment` places records with a `NULL` name column at the end of the list
-  (assuming no names exist beyond "zzz").
-
-      sort :asc, fragment("coalesce(?, 'zzz')", as(:user).name)
+  Note that you only need to coalesce values within your actual pagination strategy, and the
+  coalesced values will only be used behind the scenes (for cursor values and when filtering
+  records against cursors). You **_do not_** need to coalesce values in the query that you
+  provide to `Chunkr.Pagination.paginate/4`, and you need not worry about values somehow being
+  altered by Chunkr in the records that are returned in each page of results.
 
   ## Limitations
 

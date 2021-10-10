@@ -4,8 +4,6 @@ defmodule ChunkrTest do
   import Chunkr.PaginationHelpers
   import Chunkr.TestDataGenerators
 
-  doctest Chunkr
-
   alias Chunkr.{PhoneNumber, TestRepo, User}
 
   setup do

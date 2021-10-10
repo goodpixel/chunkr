@@ -34,10 +34,10 @@ next query.
 With keyset-based pagination, rather than tracking how far into the result set you've traversed (and
 then hoping records don't change out from under you), we instead track the value of one or more
 fields in the first and last record of the batch. Then, to get the next (or previous) batch, we
-query with a `WHERE` clause that excludes records up to those values. Not only does the database not
-have to pull irrelevant records only to count through them and discard many of them, but
-this approach also isn't negatively affected by records being created or removed during
-pagination.
+query with a `WHERE` clause that excludes records up to those values. With appropriate indexing,
+the database does not have to pull irrelevant records (only to count through them and discard
+many of them!). Furthermore, this approach isn't negatively affected by records being created
+or removed during pagination.
 
 All of this makes keyset pagination far more appealing than offset-based pagination.
 The gotcha is that it can be much more troublesome and error-prone to set up the necessary
@@ -115,38 +115,32 @@ end
 defmodule MyApp.PaginationPlanner do
   use Chunkr.PaginationPlanner
 
-  paginate_by :account_creation_date do
-    sort :desc, as(:user).inserted_at
+  paginate_by :username do
+    sort :asc, as(:user).username
   end
 
-  paginate_by :profile_name do
-    sort :asc, fragment("coalesce(?, 'zzzzzzzz')", as(:profile).username)
-    sort :asc, fragment("coalesce(?, 'zzzzzzzz')", as(:user).email_address)
-    sort :asc, as(:user).id, type: :binary_id
+  paginate_by :user_created_at do
+    sort :desc, as(:user).inserted_at
+    sort :asc, as(:user).id
   end
 end
 ```
 
-The `Chunkr.PaginationPlanner.paginate_by/2`  macro sets up a named pagination strategy,
-and each call to `sort` establishes a field to sort by when using this strategy. Results
-will be ordered by the first specified `sort` clause, with the next clause acting as a
-tie-breaker, and so on. Note that the final field provided _must_ be unique in order
-to provide consistent/deterministic results. Also note that we're coalescing values.
-Otherwise, any `NULL` values encountered while filtering against the cursor will simply
-be dropped and left out of the paginated result set (SQL cannot reasonably compare
-NULL to an actual value using operators like `<` and `>`, so it simply drops them).
+The `Chunkr.PaginationPlanner.paginate_by/2`  macro sets up a named pagination strategy
+and automatically implements the necessary supporting functions for that strategy at compile time.
 
-You'll notice that we must always use Ecto's `as` clause in order to identify where to find the
-field in question. This takes advantage of Ecto's [late bindings](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings)
-in referencing a query that is yet to be established (you can use many
-different queries with a single pagination strategy defined here so long as each query provides
-each of the referenced bindings).
+Each call to `sort` establishes a field to sort by when using this strategy. Results
+will be ordered by the first specified `sort` clause, with each subsequent clause acting
+as a tie-breaker. The final sort field _must_ be unique.
 
-The result of registering these pagination strategies is that at compile time we automatically
-define functions necessary to take a query and extend it for the desired pagination strategy.
-This involves dynamically implementing a function to order the results, functions to filter
-results against any supplied cursor, and a function to automatically retrieve both the records
-themselves as well as all fields necessary to generate the required cursors.
+Setting up these pagination strategies enables you to call the paginate function—e.g.
+`paginate(some_query, :user_created_at, :desc, opts)` (using the sort direction of the first
+`sort` clause). However, you'll also be able to call
+`paginate(some_query, :user_created_at, :asc, opts)` and Chunkr will automatically invert all
+of the sort orders for you. You always call `paginate()` with the strategy name and the sort
+order of the first field, and the rest of the sort orders will flip as needed.
+
+See more docs in the `Chunkr.PaginationPlanner` module.
 
 ### 2. Add `chunkr` to your `Ecto.Repo`:
 
@@ -165,17 +159,20 @@ This adds the convenience functions `paginate/4` and `paginate!/4` to your Repo.
 ### 3. Paginate your queries!
 
 ```elixir
-query = from u in User, as: :user, join: ap in assoc(u, :account_profile), as: :profile
+# Provide a query implementing all named bindings referenced in your previously-established strategy
+iex> query = from u in User, as: :user, join: ap in assoc(u, :account_profile), as: :profile
 
-first_page = MyApp.Repo.paginate!(query, :profile_name, first: 25)
+# Fetch the first page of results using that strategy
+iex> first_page = MyApp.Repo.paginate!(query, :username, :asc, first: 25)
 
-next_page = MyApp.Repo.paginate!(query, :profile_name, first: 25, after: first_page.end_cursor)
+# Extract records
+iex> records = Chunkr.Page.records(first_page)
+
+# Fetch subsequent pages…
+iex> next_page = MyApp.Repo.paginate!(query, :username, :asc, first: 25, after: first_page.end_cursor)
 ```
 
-Here we're using the `:profile_name` pagination strategy established above, and we're providing
-all of the named bindings required by that strategy (in this case `:profile` and `:user`).
-
-See further documentation at `Chunkr.PaginatedQueries`.
+See further documentation at `Chunkr.Pagination` and `Chunkr.Page`.
 
 <!-- MDOC !-->
 

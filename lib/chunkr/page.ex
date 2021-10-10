@@ -48,7 +48,7 @@ defmodule Chunkr.Page do
   @doc """
   Fetches the total, non-paginated count of records that match the query.
 
-  Counting the total number of records requires an extra database query,
+  Counting the total number of records requires a (potentially very expensive) extra database query,
   so this is not performed by default.
   """
   @spec total_count(Page.t()) :: integer()

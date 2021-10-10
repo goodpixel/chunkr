@@ -14,7 +14,7 @@ defmodule Chunkr.PaginationTest do
     test "with a query that already has ordering specified" do
       query = from(u in User, as: :user, order_by: [desc: u.id])
       {:error, message} = TestRepo.paginate(query, :single_field, :asc, first: 10)
-      assert String.match?(message, ~r/must not already be ordered/)
+      assert String.match?(message, ~r/must not be ordered prior/)
     end
   end
 
