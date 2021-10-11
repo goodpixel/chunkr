@@ -80,6 +80,16 @@ defmodule Chunkr.PaginationPlanner do
   provide to `Chunkr.Pagination.paginate/4`, and you need not worry about values somehow being
   altered by Chunkr in the records that are returned in each page of results.
 
+  ## Indexes
+
+  In order to get maximum performance from your paginated queries, you'll want to
+  create database indexes that align with your pagination strategy. When sorting by multiple
+  columns, you will need to have an index in place that includes each of those columns with
+  sort orders matching your strategy. However, you shouldn't need to include the inverse order
+  as the database should be able to recognize and automatically reverse the index order when
+  necessary. By providing an index that matches your pagination strategy, you should be able to
+  take advantage of [efficient pipelined top-N queries](https://use-the-index-luke.com/sql/partial-results/top-n-queries).
+
   ## Limitations
 
   Chunkr limits the number of `sort` clauses to 4.
