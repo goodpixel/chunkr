@@ -47,11 +47,7 @@ pagination into your Elixir/Ecto apps. You're going to love it.
 One thing keyset-based pagination _cannot_ provide is direct access to an arbitrary "page" of
 results. In other words, it's not possible to jump directly from page 2 to page 14—you'd need
 offset-based pagation for that. However, that's not necessarily a design pattern we'd encourage
-anyway (how is the user to know that the results they want might be on page 14?). Rather than
-jumping to an arbitrary page of results, Chunkr allows you to jump to an arbitrary position in
-the results based on actual sort values. For example, when sorting records alphabetically,
-you could allow the user to jump directly to records starting with the letter "R".
-See Chunkr's `:from` option for examples.
+anyway (how is the user to know that the results they want might be on page 14?).
 
 For more about the benefits of keyset pagination, see https://use-the-index-luke.com/no-offset.
 
@@ -92,7 +88,6 @@ Chunkr:
 * implements the necessary supporting functions for your pagination strategies at compile time
 * automatically implements inverse sorts for you
 * enables paginating forwards or backwards through a result set
-* enables jumping directly to a specific value in a result set using the `:from` option
 * honors Ecto fragments
 
 ## Installation
