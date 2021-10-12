@@ -6,8 +6,8 @@ defmodule Chunkr.Pagination do
   "planner" module is configured in the call to `use Chunkr, planner: YourApp.PaginationPlanner`.
 
   Note that you'll generally want to call the `paginate/4` or `paginate!/4` convenience
-  functions on your Repo module and not directly on this module. That way, you'll
-  automatically inherit any configuration provided in your call to `use Chunkr`.
+  functions on your Repo module and not the ones directly provided by this module. That way,
+  you'll inherit any configuration previously set on your call to `use Chunkr`.
   """
 
   alias Chunkr.{Cursor, Opts, Page}
