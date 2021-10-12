@@ -12,6 +12,7 @@ defmodule Chunkr.Cursor do
   @spec encode(cursor_values()) :: opaque_cursor()
   def encode(cursor_values) when is_list(cursor_values) do
     cursor_values
+    |> Enum.map(&Chunkr.CursorValue.Encode.convert/1)
     |> :erlang.term_to_binary()
     |> Base.url_encode64()
   end
@@ -37,11 +38,11 @@ defmodule Chunkr.Cursor do
 
   defp cursor_values(opaque_cursor) do
     with {:ok, binary} <- base64_decode(opaque_cursor),
-         {:ok, term} <- binary_to_term(binary) do
-      if is_list(term) do
-        {:ok, term}
+         {:ok, cursor_values} <- binary_to_term(binary) do
+      if is_list(cursor_values) do
+        {:ok, Enum.map(cursor_values, &Chunkr.CursorValue.Decode.convert/1)}
       else
-        {:error, "Expected a list of values but got #{inspect(term)}"}
+        {:error, "Expected a list of values but got #{inspect(cursor_values)}"}
       end
     else
       {:error, :invalid_base64_value} ->

@@ -6,7 +6,7 @@ defmodule Chunkr.CursorTest do
 
   describe "Chunkr.Cursor.decode/1" do
     test "decodes a previously-encoded set of terms" do
-      cursor_values = [{:foo, :bar}, 123, "yep"]
+      cursor_values = [:foo, "yep", ~U[2021-10-11 20:37:24.532520Z], 123, Ecto.UUID.generate()]
 
       assert cursor_values ==
                cursor_values
