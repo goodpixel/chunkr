@@ -1,6 +1,25 @@
 defmodule Chunkr.Cursor do
   @moduledoc """
   Create and decode opaque, Base64-encoded cursors.
+
+  Cursors are created from a list of values. Each individual value for a cursor is encoded by the
+  `Chunkr.CursorValue.Encode` protocol and decoded via the `Chunkr.CursorValue.Decode` protocol—which
+  can be implemented to provide custom encoding of specific types. One primary example of this is
+  encoding DateTime structs by first converting them to Unix timestamps, which require far fewer
+  bits to represent the exact same timestamp.
+
+  For example, to implement a more efficient encoding of timestamps, you could provide this:
+
+      defimpl Chunkr.CursorValue.Encode, for: DateTime do
+        def convert(%DateTime{} = datetime), do: {:dt, DateTime.to_unix(datetime, :microsecond)}
+      end
+
+      defimpl Chunkr.CursorValue.Decode, for: Tuple do
+        def convert({:dt, unix_timestamp}), do: DateTime.from_unix!(unix_timestamp, :microsecond)
+      end
+
+  Any types that do not have a custom encoding specified will be passed through as is. The list
+  of values for the cursor is then converted to binary before being Base64 encoded.
   """
 
   @type cursor_values() :: [any()]
@@ -8,6 +27,11 @@ defmodule Chunkr.Cursor do
 
   @doc """
   Create an opaque, Base64-encoded cursor from `cursor_values`.
+
+  ## Example
+
+      iex> Chunkr.Cursor.encode(["something", ~U[2021-10-12 03:07:36.504502Z], 123])
+      "g2wAAAADbQAAAAlzb21ldGhpbmdoAmQAAmR0bgcAtqDEJR_OBWF7ag=="
   """
   @spec encode(cursor_values()) :: opaque_cursor()
   def encode(cursor_values) when is_list(cursor_values) do
@@ -19,6 +43,11 @@ defmodule Chunkr.Cursor do
 
   @doc """
   Same as `decode/1` but raises an error for invalid cursors.
+
+  ## Example
+
+      iex> Chunkr.Cursor.decode!("g2wAAAADbQAAAAlzb21ldGhpbmdoAmQAAmR0bgcAtqDEJR_OBWF7ag==")
+      ["something", ~U[2021-10-12 03:07:36.504502Z], 123]
   """
   @spec decode!(opaque_cursor()) :: cursor_values() | none()
   def decode!(opaque_cursor) do
@@ -30,6 +59,11 @@ defmodule Chunkr.Cursor do
 
   @doc """
   Decode an opaque cursor.
+
+  ## Example
+
+      iex> Chunkr.Cursor.decode("g2wAAAADbQAAAAlzb21ldGhpbmdoAmQAAmR0bgcAtqDEJR_OBWF7ag==")
+      {:ok, ["something", ~U[2021-10-12 03:07:36.504502Z], 123]}
   """
   @spec decode(opaque_cursor()) :: {:ok, cursor_values()} | {:error, any()}
   def decode(opaque_cursor) when is_binary(opaque_cursor) do

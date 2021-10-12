@@ -1,15 +1,9 @@
 defmodule Chunkr.Pagination do
   @moduledoc """
-  Generic pagination functions.
+  Pagination functions.
 
-  This module provides generic pagination functions that are not specific to Ecto.
-  Under the hood, they delegate to whatever `:planner` is configured in the call to
-  `use Chunkr, planner: YourApp.PaginationPlanner`.
-
-  The expected usage is that the module referenced by the `:planner` opt will itself
-  `use Chunkr.PaginationPlanner`, which provides macros to automically implement the
-  functions necessary to extend your original query with Ecto-based filtering, sorting,
-  limiting, and field selection.
+  This module provides the high-level pagination logic. Under the hood, it delegates to whatever
+  "planner" module is configured in the call to `use Chunkr, planner: YourApp.PaginationPlanner`.
 
   Note that you'll generally want to call the `paginate/4` or `paginate!/4` convenience
   functions on your Repo module and not directly on this module. That way, you'll
