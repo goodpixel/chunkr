@@ -6,7 +6,7 @@ defmodule Chunkr do
              |> Enum.fetch!(1)
 
   @default_max_limit 100
-  @default_opts [max_limit: @default_max_limit]
+  @default_opts [cursor_mod: Chunkr.Cursor.Base64, max_limit: @default_max_limit]
 
   @doc false
   defmacro __using__(config) do

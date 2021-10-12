@@ -1,14 +1,18 @@
 defmodule Chunkr.Cursor do
   @moduledoc """
-  Create and decode opaque, Base64-encoded cursors.
+  Behaviour for encoding and decoding of cursors.
 
-  Cursors are created from a list of values. Each individual value for a cursor is encoded by the
-  `Chunkr.CursorValue.Encode` protocol and decoded via the `Chunkr.CursorValue.Decode` protocol—which
-  can be implemented to provide custom encoding of specific types. One primary example of this is
-  encoding DateTime structs by first converting them to Unix timestamps, which require far fewer
-  bits to represent the exact same timestamp.
+  Allows the default Base64 cursor to be replaced via a custom cursor type specific to your
+  application—for example, to allow signed cursors, etc. See `Chunkr.Cursor.Base64`
 
-  For example, to implement a more efficient encoding of timestamps, you could provide this:
+  Cursors are created from a list of values. Each individual value is encoded by the
+  `Chunkr.CursorValue.Encode` protocol. Then the values are together encoded into
+  cursor form via the `c:to_cursor/1` callback.
+
+  Some types can be more efficiently encoded than simply relying on their default representation.
+  For example, DateTime structs can be converted to Unix timestamps, which require far fewer bits.
+  To achieve more efficient encoding of timestamps, you can provide the following protocol
+  implementations for encoding and decoding:
 
       defimpl Chunkr.CursorValue.Encode, for: DateTime do
         def convert(%DateTime{} = datetime), do: {:dt, DateTime.to_unix(datetime, :microsecond)}
@@ -18,87 +22,89 @@ defmodule Chunkr.Cursor do
         def convert({:dt, unix_timestamp}), do: DateTime.from_unix!(unix_timestamp, :microsecond)
       end
 
-  Any types that do not have a custom encoding specified will be passed through as is. The list
-  of values for the cursor is then converted to binary before being Base64 encoded.
+  Any types that do not have a custom encoding will be passed through as is to the `c:to_cursor/1`
+  callback.
   """
 
+  @type cursor() :: binary()
   @type cursor_values() :: [any()]
-  @type opaque_cursor() :: binary()
 
   @doc """
-  Create an opaque, Base64-encoded cursor from `cursor_values`.
+  Invoked to translate a list of values into a cursor.
+
+  Must return `{:ok, cursor}` if decoding was successful. On error, it must return
+  `{:error, message}`.
+  """
+  @callback to_cursor(cursor_values :: cursor_values()) :: {:ok, cursor()} | {:error, binary()}
+
+  @doc """
+  Invoked to translate a cursor back to its initial values.
+
+  Must return `{:ok, cursor_values}` if decoding was successful. On error, it must return
+  `{:error, message}`.
+  """
+  @callback to_values(cursor :: cursor()) :: {:ok, cursor_values()} | {:error, binary()}
+
+  @doc """
+  Creates a cursor via the `c:to_cursor/1` callback.
 
   ## Example
 
-      iex> Chunkr.Cursor.encode(["something", ~U[2021-10-12 03:07:36.504502Z], 123])
-      "g2wAAAADbQAAAAlzb21ldGhpbmdoAmQAAmR0bgcAtqDEJR_OBWF7ag=="
+      iex> Chunkr.Cursor.encode(["some", "value", 123], Chunkr.Cursor.Base64)
+      {:ok, "g2wAAAADbQAAAARzb21lbQAAAAV2YWx1ZWF7ag=="}
   """
-  @spec encode(cursor_values()) :: opaque_cursor()
-  def encode(cursor_values) when is_list(cursor_values) do
+  @spec encode(cursor_values(), module()) :: {:ok, cursor()} | {:error, binary()}
+  def encode(cursor_values, cursor_mod) when is_list(cursor_values) do
     cursor_values
     |> Enum.map(&Chunkr.CursorValue.Encode.convert/1)
-    |> :erlang.term_to_binary()
-    |> Base.url_encode64()
+    |> cursor_mod.to_cursor()
   end
 
   @doc """
-  Same as `decode/1` but raises an error for invalid cursors.
+  Same as `encode/2` but raises an error if creation of cursor fails.
 
   ## Example
 
-      iex> Chunkr.Cursor.decode!("g2wAAAADbQAAAAlzb21ldGhpbmdoAmQAAmR0bgcAtqDEJR_OBWF7ag==")
-      ["something", ~U[2021-10-12 03:07:36.504502Z], 123]
+      iex> Chunkr.Cursor.encode!(["some", "value", 123], Chunkr.Cursor.Base64)
+      "g2wAAAADbQAAAARzb21lbQAAAAV2YWx1ZWF7ag=="
   """
-  @spec decode!(opaque_cursor()) :: cursor_values() | none()
-  def decode!(opaque_cursor) do
-    case decode(opaque_cursor) do
+  @spec encode!(cursor_values(), module()) :: cursor() | none()
+  def encode!(cursor_values, cursor_mod) when is_list(cursor_values) do
+    case encode(cursor_values, cursor_mod) do
       {:ok, cursor} -> cursor
       {:error, message} -> raise(ArgumentError, message)
     end
   end
 
   @doc """
-  Decode an opaque cursor.
+  Decodes a cursor via the `c:to_values/1` callback.
 
   ## Example
 
-      iex> Chunkr.Cursor.decode("g2wAAAADbQAAAAlzb21ldGhpbmdoAmQAAmR0bgcAtqDEJR_OBWF7ag==")
-      {:ok, ["something", ~U[2021-10-12 03:07:36.504502Z], 123]}
+      iex> Chunkr.Cursor.decode("g2wAAAADbQAAAARzb21lbQAAAAV2YWx1ZWF7ag==", Chunkr.Cursor.Base64)
+      {:ok, ["some", "value", 123]}
   """
-  @spec decode(opaque_cursor()) :: {:ok, cursor_values()} | {:error, any()}
-  def decode(opaque_cursor) when is_binary(opaque_cursor) do
-    cursor_values(opaque_cursor)
-  end
-
-  defp cursor_values(opaque_cursor) do
-    with {:ok, binary} <- base64_decode(opaque_cursor),
-         {:ok, cursor_values} <- binary_to_term(binary) do
-      if is_list(cursor_values) do
-        {:ok, Enum.map(cursor_values, &Chunkr.CursorValue.Decode.convert/1)}
-      else
-        {:error, "Expected a list of values but got #{inspect(cursor_values)}"}
-      end
-    else
-      {:error, :invalid_base64_value} ->
-        {:error, "Error decoding base64-encoded string: '#{inspect(opaque_cursor)}'"}
-
-      {:error, :invalid_term} ->
-        {:error, "Unable to translate binary to an Elixir term: '#{inspect(opaque_cursor)}'"}
+  @spec decode(cursor(), module()) :: {:ok, cursor_values()} | {:error, any()}
+  def decode(cursor, cursor_mod) when is_binary(cursor) do
+    case cursor_mod.to_values(cursor) do
+      {:ok, cursor_values} -> {:ok, Enum.map(cursor_values, &Chunkr.CursorValue.Decode.convert/1)}
+      {:error, message} -> {:error, message}
     end
   end
 
-  defp base64_decode(string) do
-    case Base.url_decode64(string) do
-      {:ok, value} -> {:ok, value}
-      :error -> {:error, :invalid_base64_value}
-    end
-  end
+  @doc """
+  Same as `decode/2` but raises an error for invalid cursors.
 
-  defp binary_to_term(binary) do
-    try do
-      {:ok, :erlang.binary_to_term(binary, [:safe])}
-    rescue
-      _ -> {:error, :invalid_term}
+  ## Example
+
+      iex> Chunkr.Cursor.decode!("g2wAAAADbQAAAARzb21lbQAAAAV2YWx1ZWF7ag==", Chunkr.Cursor.Base64)
+      ["some", "value", 123]
+  """
+  @spec decode!(cursor(), module()) :: cursor_values() | none()
+  def decode!(cursor, cursor_mod) do
+    case decode(cursor, cursor_mod) do
+      {:ok, cursor_values} -> cursor_values
+      {:error, message} -> raise(ArgumentError, message)
     end
   end
 end

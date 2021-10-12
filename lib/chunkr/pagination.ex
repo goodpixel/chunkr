@@ -30,6 +30,8 @@ defmodule Chunkr.Pagination do
     * `:before` — Return results ending at the provided cursor; optionally pairs with `:last`.
     * `:max_limit` — Maximum number of results the user can request for this query.
       Default is #{Chunkr.default_max_limit()}.
+    * `:cursor_mod` — Specifies the cursor module to use for encoding values as a cursor.
+      Defaults to `Chunkr.Cursor.Base64`.
     * `:repo` — Repo to use for querying (automatically passed when calling either of
       the paginate convenience functions on your Repo).
     * `:planner` — The module implementing your pagination strategy (automatically passed
@@ -61,8 +63,8 @@ defmodule Chunkr.Pagination do
          raw_results: rows_to_return,
          has_previous_page: has_previous_page?(opts, extended_rows, requested_rows),
          has_next_page: has_next_page?(opts, extended_rows, requested_rows),
-         start_cursor: List.first(rows_to_return) |> row_to_cursor(),
-         end_cursor: List.last(rows_to_return) |> row_to_cursor(),
+         start_cursor: List.first(rows_to_return) |> row_to_cursor(opts),
+         end_cursor: List.last(rows_to_return) |> row_to_cursor(opts),
          opts: opts
        }}
     else
@@ -96,13 +98,13 @@ defmodule Chunkr.Pagination do
   defp has_next_page?(%{paging_dir: :forward}, rows, requested_rows), do: rows != requested_rows
   defp has_next_page?(%{paging_dir: :backward} = opts, _, _), do: !!opts.cursor
 
-  defp row_to_cursor(nil), do: nil
-  defp row_to_cursor({cursor_values, _record}), do: Cursor.encode(cursor_values)
+  defp row_to_cursor(nil, _opts), do: nil
+  defp row_to_cursor({cursor_values, _}, opts), do: Cursor.encode!(cursor_values, opts.cursor_mod)
 
   defp apply_where(query, %{cursor: nil}), do: query
 
   defp apply_where(query, opts) do
-    cursor_values = Cursor.decode!(opts.cursor)
+    cursor_values = Cursor.decode!(opts.cursor, opts.cursor_mod)
 
     opts.planner.beyond_cursor(
       query,

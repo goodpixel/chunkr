@@ -89,7 +89,8 @@ Chunkr:
 * automatically implements inverse sorts for you
 * enables paginating forwards or backwards through a result set
 * honors Ecto fragments
-* allows custom encoding of cursor values
+* allows custom encoding of individual cursor value types
+* allows generation of fully custom cursors (e.g. signed cursors)
 
 ## Installation
 

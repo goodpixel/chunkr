@@ -11,7 +11,7 @@ defmodule Chunkr.PageTest do
   end
 
   defp fake_page() do
-    opts = %Opts{repo: MockRepo, planner: SomeModule, query: User}
+    opts = %Opts{repo: MockRepo, planner: SomeModule, query: User, cursor_mod: Cursor.Base64}
 
     %Page{
       raw_results: [{[:cursor_val_1], :foo_record}, {[:cursor_val_2], :bar_record}],
@@ -40,8 +40,8 @@ defmodule Chunkr.PageTest do
   describe "Chunkr.Page.cursors_and_records/1" do
     test "returns opaque cursors alongside their corresponding records" do
       page = fake_page()
-      cursor1 = Cursor.encode([:cursor_val_1])
-      cursor2 = Cursor.encode([:cursor_val_2])
+      cursor1 = Cursor.encode([:cursor_val_1], Cursor.Base64)
+      cursor2 = Cursor.encode([:cursor_val_2], Cursor.Base64)
       assert [{^cursor1, :foo_record}, {^cursor2, :bar_record}] = Page.cursors_and_records(page)
     end
   end
