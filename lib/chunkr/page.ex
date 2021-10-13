@@ -23,8 +23,8 @@ defmodule Chunkr.Page do
           raw_results: [{Cursor.cursor_values(), record()}],
           has_previous_page: boolean(),
           has_next_page: boolean(),
-          start_cursor: Cursor.opaque_cursor() | nil,
-          end_cursor: Cursor.opaque_cursor() | nil,
+          start_cursor: Cursor.cursor() | nil,
+          end_cursor: Cursor.cursor() | nil,
           opts: Opts.t()
         }
 
@@ -67,10 +67,12 @@ defmodule Chunkr.Page do
   @doc """
   Returns opaque cursors with their corresponding records.
   """
-  @spec cursors_and_records(Page.t()) :: [{Cursor.opaque_cursor(), any()}]
+  @spec cursors_and_records(Page.t()) :: [{Cursor.cursor(), any()}]
   def cursors_and_records(%__MODULE__{} = page) do
+    cursor_module = page.opts.cursor_mod || raise("`cursor_mod` cannot be `nil`.")
+
     Enum.map(page.raw_results, fn {cursor_values, record} ->
-      {Cursor.encode(cursor_values), record}
+      {Cursor.encode(cursor_values, cursor_module), record}
     end)
   end
 end

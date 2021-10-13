@@ -16,6 +16,9 @@ defmodule Chunkr.Opts do
       results from the start or the end of the result set (i.e. whether the limit was
       specified as `:first` or `:last`).
     * `:cursor` — The `:after` or `:before` cursor beyond which results are retrieved.
+    * `:cursor_mod` — The module implementing the `Chunkr.Cursor` behaviour to be used
+      for encoding/decoding cursor values. The default is `Chunkr.Cursor.Base64`, but a
+      custom cursor module can be provided.
     * `:max_limit` — The maximum allowed page size.
     * `:limit` — The requested page size (as specified by `:first` or `:last`).
   """
@@ -29,7 +32,8 @@ defmodule Chunkr.Opts do
           strategy: atom(),
           sort_dir: sort_dir(),
           paging_dir: :forward | :backward,
-          cursor: Chunkr.Cursor.opaque_cursor() | nil,
+          cursor: Chunkr.Cursor.cursor() | nil,
+          cursor_mod: module(),
           max_limit: pos_integer(),
           limit: pos_integer()
         }
@@ -42,6 +46,7 @@ defmodule Chunkr.Opts do
     :sort_dir,
     :paging_dir,
     :cursor,
+    :cursor_mod,
     :max_limit,
     :limit
   ]
@@ -68,7 +73,8 @@ defmodule Chunkr.Opts do
          paging_dir: paging_direction,
          max_limit: Keyword.fetch!(opts, :max_limit),
          limit: limit,
-         cursor: cursor
+         cursor: cursor,
+         cursor_mod: Keyword.fetch!(opts, :cursor_mod)
        }}
     end
   end

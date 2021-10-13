@@ -16,6 +16,22 @@ defmodule Chunkr.PaginationTest do
       {:error, message} = TestRepo.paginate(query, :single_field, :asc, first: 10)
       assert String.match?(message, ~r/must not be ordered prior/)
     end
+
+    test "honors `cursor_mod` for choosing a custom cursor implementation" do
+      TestRepo.insert(%User{
+        id: 123,
+        public_id: Ecto.UUID.generate(),
+        first_name: "Curious",
+        last_name: "George"
+      })
+
+      query = from(u in User, as: :user)
+
+      {:ok, %Page{end_cursor: cursor}} =
+        TestRepo.paginate(query, :three_fields, :asc, first: 1, cursor_mod: Chunkr.JSONCursor)
+
+      assert ["George", "Curious", 123] = Jason.decode!(cursor)
+    end
   end
 
   defmodule OtherRepo do
