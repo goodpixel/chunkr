@@ -31,7 +31,7 @@ defmodule Chunkr.Pagination do
     * `:max_limit` — Maximum number of results the user can request for this query.
       Default is #{Chunkr.default_max_limit()}.
     * `:cursor_mod` — Specifies the cursor module to use for encoding values as a cursor.
-      Defaults to `Chunkr.Cursor.Base64`.
+      Defaults to `#{Chunkr.default_cursor_mod()}`.
     * `:repo` — Repo to use for querying (automatically passed when calling either of
       the paginate convenience functions on your Repo).
     * `:planner` — The module implementing your pagination strategy (automatically passed
