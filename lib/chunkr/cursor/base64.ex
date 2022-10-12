@@ -10,8 +10,8 @@ defmodule Chunkr.Cursor.Base64 do
 
   ## Example
 
-      iex> Chunkr.Cursor.Base64.to_cursor(["some", "value", 123])
-      {:ok, "g2wAAAADbQAAAARzb21lbQAAAAV2YWx1ZWF7ag=="}
+      iex> Chunkr.Cursor.Base64.to_cursor(["some", :value, 123])
+      {:ok, "g2wAAAADbQAAAARzb21lZAAFdmFsdWVhe2o="}
   """
   @impl true
   def to_cursor(values) do
@@ -28,8 +28,8 @@ defmodule Chunkr.Cursor.Base64 do
 
   ## Example
 
-      iex> Chunkr.Cursor.Base64.to_values("g2wAAAADbQAAAARzb21lbQAAAAV2YWx1ZWF7ag==")
-      {:ok, ["some", "value", 123]}
+      iex> Chunkr.Cursor.Base64.to_values("g2wAAAADbQAAAARzb21lZAAFdmFsdWVhe2o=")
+      {:ok, ["some", :value, 123]}
   """
   @impl true
   def to_values(opaque_cursor) do
