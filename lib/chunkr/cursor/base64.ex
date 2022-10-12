@@ -40,19 +40,13 @@ defmodule Chunkr.Cursor.Base64 do
       else
         {:error, "Expected a list of values but got #{inspect(cursor_values)}"}
       end
-    else
-      {:error, :invalid_base64_value} ->
-        {:error, "Error decoding base64-encoded string: '#{inspect(opaque_cursor)}'"}
-
-      {:error, :invalid_term} ->
-        {:error, "Unable to translate binary to an Elixir term: '#{inspect(opaque_cursor)}'"}
     end
   end
 
-  defp base64_decode(string) do
-    case Base.url_decode64(string) do
+  defp base64_decode(opaque_cursor) do
+    case Base.url_decode64(opaque_cursor) do
       {:ok, value} -> {:ok, value}
-      :error -> {:error, :invalid_base64_value}
+      :error -> {:error, "Error decoding base64-encoded string: '#{inspect(opaque_cursor)}'"}
     end
   end
 
@@ -60,7 +54,7 @@ defmodule Chunkr.Cursor.Base64 do
     try do
       {:ok, :erlang.binary_to_term(binary, [:safe])}
     rescue
-      _ -> {:error, :invalid_term}
+      _ -> {:error, "Unable to translate binary to an Elixir term"}
     end
   end
 end
