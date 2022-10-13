@@ -138,10 +138,10 @@ defmodule Chunkr.PaginationPlanner do
   def parse_sorts([dir, field, [type: type]]), do: {dir, field, type}
 
   @doc false
-  def with_cursor_fields_func(query_name, fields) do
+  def with_cursor_fields_func(query_name, cursor_fields) do
     quote do
       def apply_select(query, unquote(query_name)) do
-        Ecto.Query.select(query, [record], {unquote(fields), record})
+        Ecto.Query.select(query, [record], {unquote(cursor_fields), record})
       end
     end
   end

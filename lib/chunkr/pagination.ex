@@ -61,8 +61,8 @@ defmodule Chunkr.Pagination do
       {:ok,
        %Page{
          raw_results: rows_to_return,
-         has_previous_page: has_previous_page?(opts, extended_rows, requested_rows),
-         has_next_page: has_next_page?(opts, extended_rows, requested_rows),
+         has_previous_page: prev_page?(opts, extended_rows, requested_rows),
+         has_next_page: next_page?(opts, extended_rows, requested_rows),
          start_cursor: List.first(rows_to_return) |> row_to_cursor(opts),
          end_cursor: List.last(rows_to_return) |> row_to_cursor(opts),
          opts: opts
@@ -90,13 +90,11 @@ defmodule Chunkr.Pagination do
     end
   end
 
-  defp has_previous_page?(%{paging_dir: :forward} = opts, _, _), do: !!opts.cursor
+  defp prev_page?(%{paging_dir: :forward} = opts, _, _), do: !!opts.cursor
+  defp prev_page?(%{paging_dir: :backward}, extended, requested), do: extended != requested
 
-  defp has_previous_page?(%{paging_dir: :backward}, rows, requested_rows),
-    do: rows != requested_rows
-
-  defp has_next_page?(%{paging_dir: :forward}, rows, requested_rows), do: rows != requested_rows
-  defp has_next_page?(%{paging_dir: :backward} = opts, _, _), do: !!opts.cursor
+  defp next_page?(%{paging_dir: :forward}, extended, requested), do: extended != requested
+  defp next_page?(%{paging_dir: :backward} = opts, _, _), do: !!opts.cursor
 
   defp row_to_cursor(nil, _opts), do: nil
   defp row_to_cursor({cursor_values, _}, opts), do: Cursor.encode!(cursor_values, opts.cursor_mod)
