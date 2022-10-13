@@ -42,6 +42,16 @@ defmodule Chunkr.Pagination do
   def paginate(queryable, strategy, sort_dir, options) do
     with {:ok, opts} <- Opts.new(queryable, strategy, sort_dir, options),
          {:ok, queryable} <- validate_queryable(queryable) do
+
+          query =
+      queryable
+      |> apply_where(opts)
+      |> apply_order(opts)
+      |> apply_select(opts)
+      |> apply_limit(opts.limit + 1, opts)
+      Ecto.Adapters.SQL.to_sql(:all, Chunkr.TestRepo, query)
+      |> IO.inspect(label: "THE SQL")
+
       extended_rows =
         queryable
         |> apply_where(opts)
