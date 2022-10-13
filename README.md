@@ -1,6 +1,8 @@
-<img alt="Chunkr" width="500px" src="assets/logo_o.svg">
+## <img alt="Chunkr" width="500px" src="assets/logo_o.svg">
 
 <!-- MDOC !-->
+
+[![Test](https://github.com/goodpixel/chunkr/actions/workflows/test.yml/badge.svg)](https://github.com/goodpixel/chunkr/actions/workflows/test.yml)
 
 Keyset-based query pagination for Elixir and Ecto.
 
