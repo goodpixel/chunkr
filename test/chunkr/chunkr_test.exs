@@ -1,5 +1,5 @@
 defmodule ChunkrTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import Ecto.Query
   import Chunkr.PaginationHelpers
   import Chunkr.TestDataGenerators
@@ -33,96 +33,96 @@ defmodule ChunkrTest do
     verify_pagination(TestRepo, query, :two_fields, :asc, expected, @count)
   end
 
-  test "inverting a two field sort" do
-    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
-    query = from(u in User, as: :user)
-    expected = TestRepo.all(from u in User, order_by: [desc_nulls_first: u.last_name, asc: u.id])
-    verify_pagination(TestRepo, query, :two_fields, :desc, expected, @count)
-  end
+  # test "inverting a two field sort" do
+  #   {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+  #   query = from(u in User, as: :user)
+  #   expected = TestRepo.all(from u in User, order_by: [desc_nulls_first: u.last_name, asc: u.id])
+  #   verify_pagination(TestRepo, query, :two_fields, :desc, expected, @count)
+  # end
 
-  test "paginating by three fields" do
-    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
-    query = from(u in User, as: :user)
+  # test "paginating by three fields" do
+  #   {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+  #   query = from(u in User, as: :user)
 
-    expected_results =
-      TestRepo.all(
-        from(u in User,
-          order_by: [
-            asc_nulls_last: u.last_name,
-            asc_nulls_last: u.first_name,
-            desc: u.id
-          ]
-        )
-      )
+  #   expected_results =
+  #     TestRepo.all(
+  #       from(u in User,
+  #         order_by: [
+  #           asc_nulls_last: u.last_name,
+  #           asc_nulls_last: u.first_name,
+  #           desc: u.id
+  #         ]
+  #       )
+  #     )
 
-    verify_pagination(TestRepo, query, :three_fields, :asc, expected_results, @count)
-  end
+  #   verify_pagination(TestRepo, query, :three_fields, :asc, expected_results, @count)
+  # end
 
-  test "inverting a three field sort" do
-    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
-    query = from(u in User, as: :user)
+  # test "inverting a three field sort" do
+  #   {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+  #   query = from(u in User, as: :user)
 
-    expected_results =
-      TestRepo.all(
-        from(u in User,
-          order_by: [
-            desc_nulls_first: u.last_name,
-            desc_nulls_first: u.first_name,
-            asc: u.id
-          ]
-        )
-      )
+  #   expected_results =
+  #     TestRepo.all(
+  #       from(u in User,
+  #         order_by: [
+  #           desc_nulls_first: u.last_name,
+  #           desc_nulls_first: u.first_name,
+  #           asc: u.id
+  #         ]
+  #       )
+  #     )
 
-    verify_pagination(TestRepo, query, :three_fields, :desc, expected_results, @count)
-  end
+  #   verify_pagination(TestRepo, query, :three_fields, :desc, expected_results, @count)
+  # end
 
-  test "paginating by four fields" do
-    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
-    query = from(u in User, as: :user)
+  # test "paginating by four fields" do
+  #   {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+  #   query = from(u in User, as: :user)
 
-    expected_results =
-      TestRepo.all(
-        from(u in User,
-          order_by: [
-            desc_nulls_first: u.last_name,
-            desc_nulls_first: u.first_name,
-            desc_nulls_first: u.middle_name,
-            asc: u.id
-          ]
-        )
-      )
+  #   expected_results =
+  #     TestRepo.all(
+  #       from(u in User,
+  #         order_by: [
+  #           desc_nulls_first: u.last_name,
+  #           desc_nulls_first: u.first_name,
+  #           desc_nulls_first: u.middle_name,
+  #           asc: u.id
+  #         ]
+  #       )
+  #     )
 
-    verify_pagination(TestRepo, query, :four_fields, :desc, expected_results, @count)
-  end
+  #   verify_pagination(TestRepo, query, :four_fields, :desc, expected_results, @count)
+  # end
 
-  test "inverting a four field sort" do
-    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
-    query = from(u in User, as: :user)
+  # test "inverting a four field sort" do
+  #   {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+  #   query = from(u in User, as: :user)
 
-    expected_results =
-      TestRepo.all(
-        from(u in User,
-          order_by: [
-            asc_nulls_last: u.last_name,
-            asc_nulls_last: u.first_name,
-            asc_nulls_last: u.middle_name,
-            desc: u.id
-          ]
-        )
-      )
+  #   expected_results =
+  #     TestRepo.all(
+  #       from(u in User,
+  #         order_by: [
+  #           asc_nulls_last: u.last_name,
+  #           asc_nulls_last: u.first_name,
+  #           asc_nulls_last: u.middle_name,
+  #           desc: u.id
+  #         ]
+  #       )
+  #     )
 
-    verify_pagination(TestRepo, query, :four_fields, :asc, expected_results, @count)
-  end
+  #   verify_pagination(TestRepo, query, :four_fields, :asc, expected_results, @count)
+  # end
 
-  test "paginating by UUID" do
-    {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
-    query = from(u in User, as: :user)
+  # test "paginating by UUID" do
+  #   {@count, _records} = TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
+  #   query = from(u in User, as: :user)
 
-    expected_results =
-      TestRepo.all(from u in User, order_by: [asc_nulls_last: u.last_name, desc: u.public_id])
+  #   expected_results =
+  #     TestRepo.all(from u in User, order_by: [asc_nulls_last: u.last_name, desc: u.public_id])
 
-    verify_pagination(TestRepo, query, :uuid, :asc, expected_results, @count)
-  end
+  #   verify_pagination(TestRepo, query, :uuid, :asc, expected_results, @count)
+  # end
 
   test "paginating with a subquery" do
     TestRepo.insert_all(User, Enum.take(user_attrs(), @count))
@@ -169,42 +169,42 @@ defmodule ChunkrTest do
     verify_pagination(TestRepo, query, :computed_value, :desc, expected_results, @count)
   end
 
-  test "sorting by a potentially-missing association" do
-    user_attrs = Enum.take(user_attrs(), @count)
-    {_, users} = TestRepo.insert_all(User, user_attrs, returning: true)
-    user_ids = users |> Enum.map(& &1.id)
+  # test "sorting by a potentially-missing association" do
+  #   user_attrs = Enum.take(user_attrs(), @count)
+  #   {_, users} = TestRepo.insert_all(User, user_attrs, returning: true)
+  #   user_ids = users |> Enum.map(& &1.id)
 
-    phone_attrs = Enum.take(phone_attrs(), @count)
-    phone_attrs = maybe_assign_user_ids(phone_attrs, user_ids)
-    TestRepo.insert_all(PhoneNumber, phone_attrs)
+  #   phone_attrs = Enum.take(phone_attrs(), @count)
+  #   phone_attrs = maybe_assign_user_ids(phone_attrs, user_ids)
+  #   TestRepo.insert_all(PhoneNumber, phone_attrs)
 
-    query =
-      from p in PhoneNumber,
-        as: :phone,
-        left_join: u in assoc(p, :user),
-        as: :user,
-        preload: [user: u]
+  #   query =
+  #     from p in PhoneNumber,
+  #       as: :phone,
+  #       left_join: u in assoc(p, :user),
+  #       as: :user,
+  #       preload: [user: u]
 
-    expected_results =
-      TestRepo.all(
-        from p in PhoneNumber,
-          left_join: u in assoc(p, :user),
-          order_by: [
-            asc_nulls_last: u.first_name,
-            asc: p.id
-          ],
-          preload: [user: u]
-      )
+  #   expected_results =
+  #     TestRepo.all(
+  #       from p in PhoneNumber,
+  #         left_join: u in assoc(p, :user),
+  #         order_by: [
+  #           asc_nulls_last: u.first_name,
+  #           asc: p.id
+  #         ],
+  #         preload: [user: u]
+  #     )
 
-    verify_pagination(
-      TestRepo,
-      query,
-      :by_possibly_null_association,
-      :asc,
-      expected_results,
-      @count
-    )
-  end
+  #   verify_pagination(
+  #     TestRepo,
+  #     query,
+  #     :by_possibly_null_association,
+  #     :asc,
+  #     expected_results,
+  #     @count
+  #   )
+  # end
 
   #
   # HELPERS
