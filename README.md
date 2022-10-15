@@ -1,6 +1,8 @@
-<img alt="Chunkr" width="500px" src="assets/logo_o.svg">
+## <img alt="Chunkr" width="500px" src="assets/logo_o.svg">
 
 <!-- MDOC !-->
+
+[![Test](https://github.com/goodpixel/chunkr/actions/workflows/test.yml/badge.svg)](https://github.com/goodpixel/chunkr/actions/workflows/test.yml)
 
 Keyset-based query pagination for Elixir and Ecto.
 
@@ -76,12 +78,10 @@ Chunkr took inspiration from both [Paginator](https://github.com/duffelhq/pagina
 
 Quarto already addressed the deal-breaking need to reliably sort by columns that might contain
 `NULL` values. However, other limitations remained. E.g. it wasn't easy to paginate in reverse
-from the end of a result set to the beginning. Also, pagination was broken when sorting by fields on
-associations that might be missing (say, for example, sorting users by their preferred
-address—specifically when not all users have specified a "preferred" address). Furthermore, the
-existing libraries didn't allow for sorting by Ecto fragments, which is problematic because it’s
-often desirable to sort by calculated values—e.g. to provide case-insensitive sorts of people's
-names via an Ecto fragment such as `lower(last_name)`.
+from the end of a result set to the beginning. Also, the existing libraries didn't allow for
+sorting by Ecto fragments, which is problematic because it’s often desirable to sort by
+calculated values—e.g. to provide case-insensitive sorts of people's names via an Ecto fragment
+such as `lower(last_name)`.
 
 Chunkr:
 * provides a simple DSL to declare your pagination strategies
@@ -91,6 +91,11 @@ Chunkr:
 * honors Ecto fragments
 * allows custom encoding of individual cursor value types
 * allows generation of fully custom cursors (e.g. signed cursors)
+
+Limitations of Chunkr:
+* requires Ecto
+* requires pagination strategies to be declared up front
+* doesn't support custom selection of fields (it always retrieves all fields)
 
 ## Installation
 

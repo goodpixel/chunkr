@@ -55,8 +55,17 @@ defmodule Chunkr.PaginationPlanner do
 
   Because these sort clauses must reference bindings that have not yet been established,
   we use [`:as`](https://hexdocs.pm/ecto/Ecto.Query.html#module-named-bindings)
-  to take advantage of Ecto's late binding. The column referenced by `:as` must then be
+  to take advantage of Ecto's late binding feature. The column referenced by `:as` must then be
   explicitly provided within your query or it fail.
+
+  For example, with the following pagination strategy established…
+
+      paginate_by :username do
+        sort :asc, as(:user).username
+      end
+
+  …the query `from u in User, as: :user` would be valid, but `from u in User` would not (because
+  Ecto would not know where to find the `username` field).
 
   ## Always coalesce `NULL` values!
 
@@ -129,10 +138,10 @@ defmodule Chunkr.PaginationPlanner do
   def parse_sorts([dir, field, [type: type]]), do: {dir, field, type}
 
   @doc false
-  def with_cursor_fields_func(query_name, fields) do
+  def with_cursor_fields_func(query_name, cursor_fields) do
     quote do
       def apply_select(query, unquote(query_name)) do
-        Ecto.Query.select(query, [record], {unquote(fields), record})
+        Ecto.Query.select(query, [record], {unquote(cursor_fields), record})
       end
     end
   end

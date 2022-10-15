@@ -1,0 +1,53 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        ports:
+        - 5432:5432
+        env:
+          POSTGRES_DB: chunkr_test
+          POSTGRES_PASSWORD: postgres
+
+    strategy:
+      matrix:
+        elixir: ["1.14.1"]
+        otp: ["25.1.1"]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ matrix.otp }}
+        elixir-version: ${{ matrix.elixir }}
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          _build
+          deps
+        key: ${{ runner.os }}-otp-${{ matrix.otp }}-elixir-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-otp-${{ matrix.otp }}-elixir-${{ matrix.elixir }}-
+    - name: Install dependencies
+      run: mix deps.get
+    - name: Remove compiled application files
+      run: mix clean
+    - name: Compile dependencies
+      run: mix compile
+      env:
+        MIX_ENV: test
+    - name: Run tests
+      run: mix test test/chunkr/chunkr_test.exs:45

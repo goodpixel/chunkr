@@ -5,5 +5,5 @@ defimpl Chunkr.CursorValue.Encode, for: DateTime do
 end
 
 defimpl Chunkr.CursorValue.Decode, for: Tuple do
-  def convert({:dt, unix_timestamp}), do: DateTime.from_unix!(unix_timestamp, :microsecond)
+  def convert({:dt, usec}) when is_integer(usec), do: DateTime.from_unix!(usec, :microsecond)
 end
