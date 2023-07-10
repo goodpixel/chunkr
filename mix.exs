@@ -13,6 +13,7 @@ defmodule Chunkr.MixProject do
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
+      aliases: aliases(),
       deps: deps(),
       name: @name,
       source_url: "https://github.com/goodpixel/chunkr",
@@ -57,6 +58,14 @@ defmodule Chunkr.MixProject do
     [
       main: @name,
       logo: "assets/logo-s.svg"
+    ]
+  end
+
+  defp aliases(env \\ Mix.env())
+
+  defp aliases(_) do
+    [
+      "ecto.reset": ["ecto.drop", "ecto.create"]
     ]
   end
 end
