@@ -1,4 +1,4 @@
-<img alt="Chunkr" width="500px" src="assets/logo_o.svg">
+## <img alt="Chunkr" width="500px" src="assets/logo_o.svg">
 
 <!-- MDOC !-->
 
@@ -14,22 +14,23 @@ Chunkr helps you implement:
   * APIs supporting infinite scroll-style UIs
   * and more…
 
-## Why Keyset pagination? 😍
+## Why not Offset-based pagination? 🤔
 
-The alternative—offset-based pagination—has a couple of serious drawbacks:
+Offset-based pagination is generally simpler to implement because the offset of the next batch can
+be trivially calculated based on the desired page number and page size. However, it has a couple
+of significant drawbacks:
 
-  1. It's inefficient. The further you "page" into the result set, the
+  1. **It's inefficient.** The further you "page" into the result set, the
     [less efficient your database queries will be](https://use-the-index-luke.com/no-offset) because
-    the database has to query for all the results, then count through and discard rows until it
-    reaches the desired offset.
+    the database has to query for all applicable results, then count through (and discard rows)
+    until the desired offset is reached.
 
-  2. It's inconsistent. Records created or deleted while your user paginates can cause some results
-    to either be duplicated or to be entirely missing from what is returned. Depending on your use
-    case, this could significantly undermine your user's trust or just be awkward.
+  2. **It's inconsistent.** Records created or deleted while paginating through a result set can
+    cause other records to be duplicated or missing from what gets returned. Depending on the use
+    case, this could produce invalid results, undermine trust in your application, or just be
+    awkward.
 
-Offset-based pagination is generally simpler to implement because, based on the desired page number
-and page size, the offset of the next batch can be trivially calculated and incorporated into the
-next query.
+## How is Keyset-based pagination better? 😍
 
 With keyset-based pagination, rather than tracking how far into the result set you've traversed (and
 then hoping records don't change out from under you), we instead track the value of one or more
@@ -41,8 +42,8 @@ or removed during pagination.
 
 All of this makes keyset pagination far more appealing than offset-based pagination.
 The gotcha is that it can be much more troublesome and error-prone to set up the necessary
-keyset-based queries by hand. Fortunately, we've now made it easy to incorporate keyset
-pagination into your Elixir/Ecto apps. You're going to love it.
+keyset-based queries by hand. Fortunately, we make it easy to incorporate keyset pagination into
+your Elixir/Ecto apps.
 
 One thing keyset-based pagination _cannot_ provide is direct access to an arbitrary "page" of
 results. In other words, it's not possible to jump directly from page 2 to page 14—you'd need
@@ -51,10 +52,10 @@ anyway (how is the user to know that the results they want might be on page 14?)
 
 For more about the benefits of keyset pagination, see https://use-the-index-luke.com/no-offset.
 
-## What about Cursor-based pagination? 🤔
+## Is "keyset" the same as "cursor" pagination? 🧐
 
-Keyset pagination is sometimes referred to as "cursor-based" pagination, which is valid. However,
-keyset pagination is not the only type of pagination that can be implemented with cursors.
+Keyset pagination is sometimes referred to as "cursor" pagination, which is valid. However,
+not all cursor-based pagination is keyset-based…
 
 In Keyset-based pagination, one or more values from the records being paginated are used to
 create a cursor. Then, to paginate past any given cursor, the system must generate a query
@@ -62,12 +63,11 @@ that looks for records just beyond the record represented by those cursor values
 is generally obfuscated (for example, using Base64 encoding) in order to discourage clients
 from relying directly on the particular cursor implementation.
 
-As previously mentioned, "cursor-based" pagination does not necessarily imply "keyset" pagination;
-offset-based pagination can also be implemented using cursors. For example, the current
+Offset-based pagination can also be implemented using cursors. For example, the current
 page size and offset can be encoded into an opaque cursor that the system can decode and
 use in order to determine what the next or previous page of results would be.
 
-Therefore, Chunkr is indeed cursor-based pagination. But more specificially, it is keyset-based.
+Therefore, Chunkr is indeed cursor-based pagination, but more specificially, it is keyset-based.
 
 ## Why Chunkr?
 
@@ -76,21 +76,28 @@ Chunkr took inspiration from both [Paginator](https://github.com/duffelhq/pagina
 
 Quarto already addressed the deal-breaking need to reliably sort by columns that might contain
 `NULL` values. However, other limitations remained. E.g. it wasn't easy to paginate in reverse
-from the end of a result set to the beginning. Also, pagination was broken when sorting by fields on
-associations that might be missing (say, for example, sorting users by their preferred
-address—specifically when not all users have specified a "preferred" address). Furthermore, the
-existing libraries didn't allow for sorting by Ecto fragments, which is problematic because it’s
-often desirable to sort by calculated values—e.g. to provide case-insensitive sorts of people's
-names via an Ecto fragment such as `lower(last_name)`.
+from the end of a result set to the beginning. Also, the existing libraries didn't allow for
+sorting by Ecto fragments, which is problematic because it’s often desirable to sort by
+calculated values—e.g. to provide case-insensitive sorts of people's names via an Ecto fragment
+such as `lower(last_name)`.
 
-Chunkr:
-* provides a simple DSL to declare your pagination strategies
-* implements the necessary supporting functions for your pagination strategies at compile time
-* automatically implements inverse sorts for you
-* enables paginating forwards or backwards through a result set
-* honors Ecto fragments
-* allows custom encoding of individual cursor value types
-* allows generation of fully custom cursors (e.g. signed cursors)
+### Chunkr provides:
+* simple DSL to establish pagination strategies
+* paginating forwards or backwards through a result set
+* inversion of pagination strategies
+* support for Ecto fragments
+* ability to handle `NULL` values (e.g. by using `COALESCE`)
+* custom encoding of cursor values
+* custom cursors (e.g. signed cursors)
+
+### Limitations of Chunkr:
+* requires Ecto
+* pagination strategies must be determined at compiled time
+* no more than 4 values per cursor (e.g. you might sort by `last_name`, `first_name`, and
+  `middle_name` with `user_id` as the tiebreaker, but you couldn't add a fifth column to sort by
+  at this point)
+* doesn't yet support custom selection of fields (it always retrieves all fields for the returned
+  records)
 
 ## Installation
 
