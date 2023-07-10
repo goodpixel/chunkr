@@ -163,6 +163,7 @@ defmodule Chunkr.PaginationPlanner do
   end
 
   @doc false
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 1 do
     [{dir1, f1, t1}] = sorts
     rdir1 = invert(dir1)
@@ -200,6 +201,7 @@ defmodule Chunkr.PaginationPlanner do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 2 do
     [{dir1, f1, t1}, {dir2, f2, t2}] = sorts
     rdir1 = invert(dir1)
@@ -266,6 +268,7 @@ defmodule Chunkr.PaginationPlanner do
   end
 
   @doc false
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 3 do
     [{dir1, f1, t1}, {dir2, f2, t2}, {dir3, f3, t3}] = sorts
     rdir1 = invert(dir1)
@@ -344,6 +347,7 @@ defmodule Chunkr.PaginationPlanner do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 4 do
     [{dir1, f1, t1}, {dir2, f2, t2}, {dir3, f3, t3}, {dir4, f4, t4}] = sorts
     rdir1 = invert(dir1)
@@ -358,6 +362,7 @@ defmodule Chunkr.PaginationPlanner do
       Enum.map(operators, &invert/1)
 
     quote do
+      # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
       def beyond_cursor(query, unquote(query_name), unquote(dir1), :forward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
@@ -377,6 +382,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
+      # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
       def beyond_cursor(query, unquote(query_name), unquote(dir1), :backward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
@@ -396,6 +402,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
+      # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
       def beyond_cursor(query, unquote(query_name), unquote(rdir1), :forward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
@@ -415,6 +422,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
+      # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
       def beyond_cursor(query, unquote(query_name), unquote(rdir1), :backward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 

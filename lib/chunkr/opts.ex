@@ -90,8 +90,7 @@ defmodule Chunkr.Opts do
 
   @valid_combos @valid_keys
                 |> Enum.map(&Enum.join(&1, ", "))
-                |> Enum.map(&"[#{&1}]")
-                |> Enum.join(" | ")
+                |> Enum.map_join(" | ", &"[#{&1}]")
 
   defp validate(opts) do
     provided_keys = opts |> Keyword.take([:first, :last, :after, :before]) |> Keyword.keys()
