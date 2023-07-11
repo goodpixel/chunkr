@@ -5,7 +5,7 @@ defmodule Chunkr.Pagination do
   This module provides the high-level pagination logic. Under the hood, it delegates to whatever
   "planner" module is configured in the call to `use Chunkr, planner: YourApp.PaginationPlanner`.
 
-  Note that you'll generally want to call the `paginate/4` or `paginate!/4` convenience
+  Note that you'll generally want to call the `paginate/3` or `paginate!/3` convenience
   functions on your Repo module and not the ones directly provided by this module. That way,
   you'll inherit any configuration previously set on your call to `use Chunkr`.
   """
@@ -13,17 +13,18 @@ defmodule Chunkr.Pagination do
   alias Chunkr.{Cursor, Opts, Page}
 
   @doc """
-  Paginates a query in `sort_dir` using your predefined `strategy`.
+  Paginates a query using a predefined strategy.
 
-  The `sort_dir` you specify aligns with the primary sort direction of your pagination strategy.
-  However, you can also provide the inverse sort direction from what your pagination strategy
-  specifies, and the entire sort strategy will automically be inverted.
-
-  The query _must not_ be ordered before calling `paginate/4` as the proper ordering will be
+  The query _must not_ be ordered before calling `paginate/3` as the proper ordering will be
   automatically applied per the registered strategy.
 
   ## Options
 
+    * `:by` — The named pagination strategy to use.
+    * `:inverted` — Whether the strategy should be executed as written or inverted.
+      For example, if the established strategy orders by `[desc: :last_name, asc: :created_at]`,
+      inverting would flip the ordering to be `[asc: :last_name, desc: :created_at]`. Inverts
+      the specified ordering only if set to `true`.
     * `:first` — Retrieve the first _n_ results; must be between `0` and `:max_limit`.
     * `:last` — Retrieve the last _n_ results; must be between `0` and `:max_limit`.
     * `:after` — Return results starting after the provided cursor; optionally pairs with `:first`.
@@ -37,10 +38,9 @@ defmodule Chunkr.Pagination do
     * `:planner` — The module implementing your pagination strategy (automatically passed
       when calling either of the paginate convenience functions on your Repo).
   """
-  @spec paginate(any, atom(), Opts.sort_dir(), keyword) ::
-          {:error, String.t()} | {:ok, Page.t()}
-  def paginate(queryable, strategy, sort_dir, options) do
-    with {:ok, opts} <- Opts.new(strategy, sort_dir, options),
+  @spec paginate(any, keyword) :: {:error, String.t()} | {:ok, Page.t()}
+  def paginate(queryable, options) do
+    with {:ok, opts} <- Opts.new(options),
          {:ok, queryable} <- validate_queryable(queryable) do
       extended_rows =
         queryable
@@ -80,11 +80,11 @@ defmodule Chunkr.Pagination do
   defp validate_queryable(query), do: {:ok, query}
 
   @doc """
-  Same as `paginate/4`, but raises an error for invalid input.
+  Same as `paginate/3`, but raises an error for invalid input.
   """
-  @spec paginate!(any, atom(), Opts.sort_dir(), keyword) :: Page.t()
-  def paginate!(queryable, strategy, sort_dir, opts) do
-    case paginate(queryable, strategy, sort_dir, opts) do
+  @spec paginate!(any, keyword) :: Page.t()
+  def paginate!(queryable, opts) do
+    case paginate(queryable, opts) do
       {:ok, page} -> page
       {:error, message} -> raise ArgumentError, message
     end
@@ -109,14 +109,14 @@ defmodule Chunkr.Pagination do
     opts.planner.beyond_cursor(
       query,
       opts.strategy,
-      opts.sort_dir,
+      opts.disposition,
       opts.paging_dir,
       cursor_values
     )
   end
 
   defp apply_order(query, opts) do
-    opts.planner.apply_order(query, opts.strategy, opts.sort_dir, opts.paging_dir)
+    opts.planner.apply_order(query, opts.strategy, opts.disposition, opts.paging_dir)
   end
 
   defp apply_select(query, opts) do

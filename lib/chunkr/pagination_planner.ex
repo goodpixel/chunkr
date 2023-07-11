@@ -77,7 +77,7 @@ defmodule Chunkr.PaginationPlanner do
   Note that you only need to coalesce values within your actual pagination strategy, and the
   coalesced values will only be used behind the scenes (for cursor values and when filtering
   records against cursors). You **_do not_** need to coalesce values in the query that you
-  provide to `Chunkr.Pagination.paginate/4`, and you need not worry about values somehow being
+  provide to `Chunkr.Pagination.paginate/3`, and you need not worry about values somehow being
   altered by Chunkr in the records that are returned in each page of results.
 
   ## Indexes
@@ -138,25 +138,23 @@ defmodule Chunkr.PaginationPlanner do
   end
 
   @doc false
-  def with_order_func(query_name, primary_sort_dir, order_bys) do
-    inverted_sort_dir = invert(primary_sort_dir)
-
+  def with_order_func(query_name, order_bys) do
     quote do
-      def apply_order(query, unquote(query_name), unquote(primary_sort_dir), :forward) do
+      def apply_order(query, unquote(query_name), :regular, :forward) do
         Ecto.Query.order_by(query, unquote(order_bys))
       end
 
-      def apply_order(query, unquote(query_name), unquote(primary_sort_dir), :backward) do
-        Ecto.Query.order_by(query, unquote(order_bys))
-        |> Ecto.Query.reverse_order()
-      end
-
-      def apply_order(query, unquote(query_name), unquote(inverted_sort_dir), :forward) do
+      def apply_order(query, unquote(query_name), :regular, :backward) do
         Ecto.Query.order_by(query, unquote(order_bys))
         |> Ecto.Query.reverse_order()
       end
 
-      def apply_order(query, unquote(query_name), unquote(inverted_sort_dir), :backward) do
+      def apply_order(query, unquote(query_name), :inverted, :forward) do
+        Ecto.Query.order_by(query, unquote(order_bys))
+        |> Ecto.Query.reverse_order()
+      end
+
+      def apply_order(query, unquote(query_name), :inverted, :backward) do
         Ecto.Query.order_by(query, unquote(order_bys))
       end
     end
@@ -166,7 +164,6 @@ defmodule Chunkr.PaginationPlanner do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 1 do
     [{dir1, f1, t1}] = sorts
-    rdir1 = invert(dir1)
 
     operators = derive_operators([dir1])
     [op1] = operators
@@ -176,27 +173,27 @@ defmodule Chunkr.PaginationPlanner do
     fields = Enum.map(sorts, fn {_dir, field, _type} -> field end)
 
     quote do
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :forward, cursor_values) do
         [cv1] = cursor_values
         Ecto.Query.where(query, compare(unquote(f1), unquote(op1), cv1, unquote(t1)))
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :backward, cursor_values) do
         [cv1] = cursor_values
         Ecto.Query.where(query, compare(unquote(f1), unquote(rop1), cv1, unquote(t1)))
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :forward, cursor_values) do
         [cv1] = cursor_values
         Ecto.Query.where(query, compare(unquote(f1), unquote(rop1), cv1, unquote(t1)))
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :backward, cursor_values) do
         [cv1] = cursor_values
         Ecto.Query.where(query, compare(unquote(f1), unquote(op1), cv1, unquote(t1)))
       end
 
-      unquote(with_order_func(query_name, dir1, order_bys))
+      unquote(with_order_func(query_name, order_bys))
       unquote(with_cursor_fields_func(query_name, fields))
     end
   end
@@ -204,7 +201,6 @@ defmodule Chunkr.PaginationPlanner do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 2 do
     [{dir1, f1, t1}, {dir2, f2, t2}] = sorts
-    rdir1 = invert(dir1)
 
     operators = derive_operators([dir1, dir2])
     [op1, op2, op3, op4] = operators
@@ -214,7 +210,7 @@ defmodule Chunkr.PaginationPlanner do
     fields = Enum.map(sorts, fn {_dir, field, _type} -> field end)
 
     quote do
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :forward, cursor_values) do
         [cv1, cv2] = cursor_values
 
         query
@@ -226,7 +222,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :backward, cursor_values) do
         [cv1, cv2] = cursor_values
 
         query
@@ -238,7 +234,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :forward, cursor_values) do
         [cv1, cv2] = cursor_values
 
         query
@@ -250,7 +246,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :backward, cursor_values) do
         [cv1, cv2] = cursor_values
 
         query
@@ -262,7 +258,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      unquote(with_order_func(query_name, dir1, order_bys))
+      unquote(with_order_func(query_name, order_bys))
       unquote(with_cursor_fields_func(query_name, fields))
     end
   end
@@ -271,7 +267,6 @@ defmodule Chunkr.PaginationPlanner do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 3 do
     [{dir1, f1, t1}, {dir2, f2, t2}, {dir3, f3, t3}] = sorts
-    rdir1 = invert(dir1)
 
     operators = derive_operators([dir1, dir2, dir3])
 
@@ -282,7 +277,7 @@ defmodule Chunkr.PaginationPlanner do
     fields = Enum.map(sorts, fn {_dir, field, _type} -> field end)
 
     quote do
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :forward, cursor_values) do
         [cv1, cv2, cv3] = cursor_values
 
         query
@@ -297,7 +292,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :backward, cursor_values) do
         [cv1, cv2, cv3] = cursor_values
 
         query
@@ -312,7 +307,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :forward, cursor_values) do
         [cv1, cv2, cv3] = cursor_values
 
         query
@@ -327,7 +322,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :backward, cursor_values) do
         [cv1, cv2, cv3] = cursor_values
 
         query
@@ -342,7 +337,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      unquote(with_order_func(query_name, dir1, order_bys))
+      unquote(with_order_func(query_name, order_bys))
       unquote(with_cursor_fields_func(query_name, fields))
     end
   end
@@ -350,7 +345,6 @@ defmodule Chunkr.PaginationPlanner do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def implement(query_name, sorts) when length(sorts) == 4 do
     [{dir1, f1, t1}, {dir2, f2, t2}, {dir3, f3, t3}, {dir4, f4, t4}] = sorts
-    rdir1 = invert(dir1)
 
     order_bys = Enum.map(sorts, fn {dir, field, _type} -> {dir, field} end)
     fields = Enum.map(sorts, fn {_dir, field, _type} -> field end)
@@ -363,7 +357,7 @@ defmodule Chunkr.PaginationPlanner do
 
     quote do
       # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :forward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
         query
@@ -383,7 +377,7 @@ defmodule Chunkr.PaginationPlanner do
       end
 
       # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-      def beyond_cursor(query, unquote(query_name), unquote(dir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :regular, :backward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
         query
@@ -403,7 +397,7 @@ defmodule Chunkr.PaginationPlanner do
       end
 
       # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :forward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :forward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
         query
@@ -423,7 +417,7 @@ defmodule Chunkr.PaginationPlanner do
       end
 
       # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-      def beyond_cursor(query, unquote(query_name), unquote(rdir1), :backward, cursor_values) do
+      def beyond_cursor(query, unquote(query_name), :inverted, :backward, cursor_values) do
         [cv1, cv2, cv3, cv4] = cursor_values
 
         query
@@ -442,7 +436,7 @@ defmodule Chunkr.PaginationPlanner do
         )
       end
 
-      unquote(with_order_func(query_name, dir1, order_bys))
+      unquote(with_order_func(query_name, order_bys))
       unquote(with_cursor_fields_func(query_name, fields))
     end
   end
