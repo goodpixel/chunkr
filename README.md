@@ -1,6 +1,4 @@
-## <img alt="Chunkr" width="500px" src="assets/logo_o.svg">
-
-<!-- MDOC !-->
+<img alt="Chunkr" width="500px" src="assets/logo-o.svg">
 
 Keyset-based query pagination for Elixir and Ecto.
 
@@ -30,7 +28,7 @@ of significant drawbacks:
     case, this could produce invalid results, undermine trust in your application, or just be
     awkward.
 
-## How is Keyset-based pagination better? 😍
+## How is Keyset-based better? 😍
 
 With keyset-based pagination, rather than tracking how far into the result set you've traversed (and
 then hoping records don't change out from under you), we instead track the value of one or more
@@ -52,7 +50,7 @@ anyway (how is the user to know that the results they want might be on page 14?)
 
 For more about the benefits of keyset pagination, see https://use-the-index-luke.com/no-offset.
 
-## Is "keyset" the same as "cursor" pagination? 🧐
+## "Keyset" vs. "Cursor" 🧐
 
 Keyset pagination is sometimes referred to as "cursor" pagination, which is valid. However,
 not all cursor-based pagination is keyset-based…
@@ -82,13 +80,13 @@ calculated values—e.g. to provide case-insensitive sorts of people's names via
 such as `lower(last_name)`.
 
 ### Chunkr provides:
-* simple DSL to establish pagination strategies
+* a simple DSL to establish pagination strategies
+* ability to handle `NULL` values (e.g. by using `COALESCE`)
+* support for Ecto fragments
 * paginating forwards or backwards through a result set
 * inversion of pagination strategies
-* support for Ecto fragments
-* ability to handle `NULL` values (e.g. by using `COALESCE`)
-* custom encoding of cursor values
-* custom cursors (e.g. signed cursors)
+* support for custom encoding of cursor values
+* support for custom cursors (e.g. signed cursors)
 
 ### Limitations of Chunkr:
 * requires Ecto
@@ -146,7 +144,7 @@ order of the first field, and the rest of the sort orders will flip as needed.
 
 See more docs in the `Chunkr.PaginationPlanner` module.
 
-### 2. Add `chunkr` to your `Ecto.Repo`:
+### 2. Use Chunkr in your Repo module:
 
 ```elixir
 defmodule MyApp.Repo do
@@ -177,8 +175,6 @@ iex> next_page = MyApp.Repo.paginate!(query, :username, :asc, first: 25, after: 
 ```
 
 See further documentation at `Chunkr.Pagination` and `Chunkr.Page`.
-
-<!-- MDOC !-->
 
 ## Documentation
 

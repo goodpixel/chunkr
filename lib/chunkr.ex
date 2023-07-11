@@ -1,9 +1,5 @@
 defmodule Chunkr do
-  @external_resource "README.md"
-  @moduledoc "README.md"
-             |> File.read!()
-             |> String.split("<!-- MDOC !-->")
-             |> Enum.fetch!(1)
+  @moduledoc false
 
   @default_max_limit 100
   @default_opts [cursor_mod: Chunkr.Cursor.Base64, max_limit: @default_max_limit]

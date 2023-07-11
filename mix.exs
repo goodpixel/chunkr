@@ -16,7 +16,7 @@ defmodule Chunkr.MixProject do
       aliases: aliases(),
       deps: deps(),
       name: @name,
-      source_url: "https://github.com/goodpixel/chunkr",
+      source_url: @repo_url,
       docs: docs()
     ]
   end
@@ -56,8 +56,10 @@ defmodule Chunkr.MixProject do
 
   defp docs do
     [
-      main: @name,
-      logo: "assets/logo-s.svg"
+      main: "README",
+      logo: "assets/logo-s.svg",
+      extras: ["README.md": [title: "Overview"]],
+      assets: "assets"
     ]
   end
 
