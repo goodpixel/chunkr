@@ -11,7 +11,7 @@ defmodule Chunkr.PageTest do
   end
 
   defp fake_page() do
-    opts = %Opts{repo: MockRepo, planner: SomeModule, query: User, cursor_mod: Cursor.Base64}
+    opts = %Opts{repo: MockRepo, planner: SomeModule, cursor_mod: Cursor.Base64}
 
     %Page{
       raw_results: [{[:cursor_val_1], :foo_record}, {[:cursor_val_2], :bar_record}],
@@ -21,13 +21,6 @@ defmodule Chunkr.PageTest do
       end_cursor: "hrpmh",
       opts: opts
     }
-  end
-
-  describe "Chunkr.Page.total_count/1" do
-    test "queries the total non-paginated count" do
-      page = fake_page()
-      assert 1_234_567 = Page.total_count(page)
-    end
   end
 
   describe "Chunkr.Page.records/1" do

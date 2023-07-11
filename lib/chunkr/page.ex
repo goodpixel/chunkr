@@ -46,17 +46,6 @@ defmodule Chunkr.Page do
   ]
 
   @doc """
-  Fetches the total, non-paginated count of records that match the query.
-
-  Counting the total number of records requires a (potentially very expensive) extra database query,
-  so this is not performed by default.
-  """
-  @spec total_count(Page.t()) :: integer()
-  def total_count(%__MODULE__{opts: opts}) do
-    opts.repo.aggregate(opts.query, :count)
-  end
-
-  @doc """
   Extracts just the records out of the raw results.
   """
   @spec records(Page.t()) :: [any()]

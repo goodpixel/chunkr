@@ -6,7 +6,6 @@ defmodule Chunkr.Opts do
 
     * `:repo` — The `Ecto.Repo` for the query.
     * `:planner` — The module implementing the pagination strategy.
-    * `:query` — The non-paginated query to be extended for pagination purposes.
     * `:strategy` — The name of the pagination strategy to use.
     * `:sort_dir` — The primary sort direction used for the query. Note that this
       aligns with the very first `sort` clause registered in the named pagination strategy.
@@ -28,7 +27,6 @@ defmodule Chunkr.Opts do
   @type t :: %__MODULE__{
           repo: atom(),
           planner: atom(),
-          query: Ecto.Query.t(),
           strategy: atom(),
           sort_dir: sort_dir(),
           paging_dir: :forward | :backward,
@@ -41,7 +39,6 @@ defmodule Chunkr.Opts do
   defstruct [
     :repo,
     :planner,
-    :query,
     :strategy,
     :sort_dir,
     :paging_dir,
@@ -51,13 +48,13 @@ defmodule Chunkr.Opts do
     :limit
   ]
 
-  @spec new(any, any, sort_dir, keyword) :: {:invalid_opts, String.t()} | {:ok, struct}
   @doc """
   Validate provided options and return a `Chunkr.Opts` struct
   """
-  def new(query, strategy, sort_dir, opts) do
+  @spec new(any, sort_dir, keyword) :: {:invalid_opts, String.t()} | {:ok, struct}
+  def new(strategy, sort_dir, opts) do
     case validate_options(strategy, opts) do
-      {:ok, opts} -> {:ok, struct!(%__MODULE__{query: query, sort_dir: sort_dir}, opts)}
+      {:ok, opts} -> {:ok, struct!(%__MODULE__{sort_dir: sort_dir}, opts)}
       {:error, message} -> {:invalid_opts, message}
     end
   end

@@ -40,7 +40,7 @@ defmodule Chunkr.Pagination do
   @spec paginate(any, atom(), Opts.sort_dir(), keyword) ::
           {:error, String.t()} | {:ok, Page.t()}
   def paginate(queryable, strategy, sort_dir, options) do
-    with {:ok, opts} <- Opts.new(queryable, strategy, sort_dir, options),
+    with {:ok, opts} <- Opts.new(strategy, sort_dir, options),
          {:ok, queryable} <- validate_queryable(queryable) do
       extended_rows =
         queryable
