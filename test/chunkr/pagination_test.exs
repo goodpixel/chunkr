@@ -10,10 +10,10 @@ defmodule Chunkr.PaginationTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Chunkr.TestRepo)
   end
 
-  describe "Chunkr.Pagination.paginate/4" do
+  describe "Chunkr.Pagination.paginate/3" do
     test "with a query that already has ordering specified" do
       query = from(u in User, as: :user, order_by: [desc: u.id])
-      {:error, message} = TestRepo.paginate(query, :single_field, :asc, first: 10)
+      {:error, message} = TestRepo.paginate(query, by: :single_field, first: 10)
       assert String.match?(message, ~r/must not be ordered prior/)
     end
 
@@ -28,7 +28,7 @@ defmodule Chunkr.PaginationTest do
       query = from(u in User, as: :user)
 
       {:ok, %Page{end_cursor: cursor}} =
-        TestRepo.paginate(query, :three_fields, :asc, first: 1, cursor_mod: Chunkr.JSONCursor)
+        TestRepo.paginate(query, by: :three_fields, first: 1, cursor_mod: Chunkr.JSONCursor)
 
       assert ["George", "Curious", 123] = Jason.decode!(cursor)
     end
@@ -52,18 +52,8 @@ defmodule Chunkr.PaginationTest do
 
   describe "opts" do
     test "respects config provided to `use Chunkr`" do
-      assert %Page{
-               opts: %{
-                 planner: Chunkr.TestPaginationPlanner,
-                 max_limit: 123_456
-               }
-             } =
-               OtherRepo.paginate!(
-                 from(u in User, as: :user),
-                 :single_field,
-                 :asc,
-                 first: 10
-               )
+      assert %Page{opts: %{planner: Chunkr.TestPaginationPlanner, max_limit: 123_456}} =
+               OtherRepo.paginate!(from(u in User, as: :user), by: :single_field, first: 10)
     end
 
     test "allows config to be overridden on the fly" do
@@ -75,9 +65,8 @@ defmodule Chunkr.PaginationTest do
              } =
                OtherRepo.paginate!(
                  from(u in User, as: :user),
-                 :another_strategy,
-                 :asc,
                  first: 10,
+                 by: :another_strategy,
                  planner: AnotherPaginationPlanner,
                  max_limit: 999_999
                )

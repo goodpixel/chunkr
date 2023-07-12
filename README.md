@@ -128,21 +128,13 @@ defmodule MyApp.PaginationPlanner do
 end
 ```
 
-The `Chunkr.PaginationPlanner.paginate_by/2`  macro sets up a named pagination strategy
-and automatically implements the necessary supporting functions for that strategy at compile time.
+The `paginate_by`  macro sets up a named pagination strategy and implements the underlying
+functions to support that strategy. Each nested call to `sort` establishes a field to sort
+by when using this strategy. Results will be ordered by the first specified `sort` clause,
+then by each subsequent clause in the order specified.
+**The final sort field is the ultimate tie-breaker and _must_ be unique.**
 
-Each call to `sort` establishes a field to sort by when using this strategy. Results
-will be ordered by the first specified `sort` clause, with each subsequent clause acting
-as a tie-breaker. The final sort field _must_ be unique.
-
-Setting up these pagination strategies enables you to call the paginate function—e.g.
-`paginate(some_query, :user_created_at, :desc, opts)` (using the sort direction of the first
-`sort` clause). However, you'll also be able to call
-`paginate(some_query, :user_created_at, :asc, opts)` and Chunkr will automatically invert all
-of the sort orders for you. You always call `paginate()` with the strategy name and the sort
-order of the first field, and the rest of the sort orders will flip as needed.
-
-See more docs in the `Chunkr.PaginationPlanner` module.
+See the `Chunkr.PaginationPlanner` module for more.
 
 ### 2. Use Chunkr in your Repo module:
 
@@ -156,22 +148,22 @@ defmodule MyApp.Repo do
 end
 ```
 
-This adds the convenience functions `paginate/4` and `paginate!/4` to your Repo.
+This adds the convenience functions `paginate/3` and `paginate!/3` to your Repo.
 
 ### 3. Paginate your queries!
 
 ```elixir
-# Provide a query implementing all named bindings referenced in your previously-established strategy
-iex> query = from u in User, as: :user, join: ap in assoc(u, :account_profile), as: :profile
+# Provide a query implementing all named bindings referenced in your named pagination strategy
+iex> query = from u in User, as: :user
 
-# Fetch the first page of results using that strategy
-iex> first_page = MyApp.Repo.paginate!(query, :username, :asc, first: 25)
+# Fetch the first page of results using your named strategy
+iex> first_page = MyApp.Repo.paginate!(query, by: :username, first: 25)
 
 # Extract records
 iex> records = Chunkr.Page.records(first_page)
 
 # Fetch subsequent pages…
-iex> next_page = MyApp.Repo.paginate!(query, :username, :asc, first: 25, after: first_page.end_cursor)
+iex> next_page = MyApp.Repo.paginate!(query, by: :username, first: 25, after: first_page.end_cursor)
 ```
 
 See further documentation at `Chunkr.Pagination` and `Chunkr.Page`.

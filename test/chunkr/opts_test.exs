@@ -9,12 +9,13 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 strategy: :first_name,
-                sort_dir: :asc,
+                disposition: :regular,
                 paging_dir: :forward,
                 cursor: nil,
                 limit: 101
               }} =
-               Opts.new(:first_name, :asc,
+               Opts.new(
+                 by: :first_name,
                  repo: TestRepo,
                  planner: PlannerModule,
                  cursor_mod: Chunkr.Cursor.Base64,
@@ -27,12 +28,13 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 strategy: :first_name,
-                sort_dir: :desc,
+                disposition: :regular,
                 paging_dir: :forward,
                 cursor: "abc123",
                 limit: 101
               }} =
-               Opts.new(:first_name, :desc,
+               Opts.new(
+                 by: :first_name,
                  repo: TestRepo,
                  planner: PlannerModule,
                  cursor_mod: Chunkr.Cursor.Base64,
@@ -46,12 +48,13 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 strategy: :middle_name,
-                sort_dir: :asc,
+                disposition: :regular,
                 paging_dir: :backward,
                 cursor: nil,
                 limit: 99
               }} =
-               Opts.new(:middle_name, :asc,
+               Opts.new(
+                 by: :middle_name,
                  repo: TestRepo,
                  planner: PlannerModule,
                  cursor_mod: Chunkr.Cursor.Base64,
@@ -64,12 +67,13 @@ defmodule Chunkr.OptsTest do
       assert {:ok,
               %Opts{
                 strategy: :middle_name,
-                sort_dir: :asc,
+                disposition: :regular,
                 paging_dir: :backward,
                 cursor: "def456",
                 limit: 99
               }} =
-               Opts.new(:middle_name, :asc,
+               Opts.new(
+                 by: :middle_name,
                  repo: TestRepo,
                  planner: PlannerModule,
                  cursor_mod: Chunkr.Cursor.Base64,
@@ -79,42 +83,66 @@ defmodule Chunkr.OptsTest do
                )
     end
 
+    test "sets disposition correctly when inverting the specified ordering" do
+      assert {:ok,
+              %Opts{
+                strategy: :first_name,
+                disposition: :inverted,
+                paging_dir: :forward,
+                cursor: "abc123",
+                limit: 101
+              }} =
+               Opts.new(
+                 by: :first_name,
+                 inverted: true,
+                 repo: TestRepo,
+                 planner: PlannerModule,
+                 cursor_mod: Chunkr.Cursor.Base64,
+                 first: 101,
+                 after: "abc123",
+                 max_limit: 200
+               )
+    end
+
     test "providing invalid page options results in an `{:invalid_opts, message}` error" do
-      assert {:invalid_opts, _} = Opts.new(:middle_name, :desc, first: 99, last: 99)
-      assert {:invalid_opts, _} = Opts.new(:middle_name, :desc, after: 99, before: 99)
-      assert {:invalid_opts, _} = Opts.new(:middle_name, :desc, first: 99, before: 99)
-      assert {:invalid_opts, _} = Opts.new(:middle_name, :desc, last: 99, after: 99)
+      assert {:invalid_opts, _} = Opts.new(by: :middle_name, first: 99, last: 99)
+      assert {:invalid_opts, _} = Opts.new(by: :middle_name, after: 99, before: 99)
+      assert {:invalid_opts, _} = Opts.new(by: :middle_name, first: 99, before: 99)
+      assert {:invalid_opts, _} = Opts.new(by: :middle_name, last: 99, after: 99)
     end
 
     test "requesting a negative number of rows in an `{:invalid_opts, message}` error" do
       opts = [
+        by: :strategy,
         repo: TestRepo,
         planner: PlannerModule,
         cursor_mod: Chunkr.Cursor.Base64,
         max_limit: 100
       ]
 
-      assert {:invalid_opts, _} = Opts.new(:strategy, :asc, [{:first, -1} | opts])
-      assert {:ok, _} = Opts.new(:strategy, :asc, [{:first, 0} | opts])
+      assert {:invalid_opts, _} = Opts.new([{:first, -1} | opts])
+      assert {:ok, _} = Opts.new([{:first, 0} | opts])
     end
 
     test "requesting too many rows results in an `{:invalid_opts, message}` error" do
       opts = [
+        by: :strategy,
         repo: TestRepo,
         planner: PlannerModule,
         cursor_mod: Chunkr.Cursor.Base64,
         max_limit: 5
       ]
 
-      assert {:invalid_opts, _} = Opts.new(:strategy, :asc, [{:first, 6} | opts])
-      assert {:ok, _} = Opts.new(:strategy, :asc, [{:first, 5} | opts])
+      assert {:invalid_opts, _} = Opts.new([{:first, 6} | opts])
+      assert {:ok, _} = Opts.new([{:first, 5} | opts])
 
-      assert {:invalid_opts, _} = Opts.new(:strategy, :asc, [{:last, 6} | opts])
-      assert {:ok, _} = Opts.new(:strategy, :asc, [{:last, 5} | opts])
+      assert {:invalid_opts, _} = Opts.new([{:last, 6} | opts])
+      assert {:ok, _} = Opts.new([{:last, 5} | opts])
     end
 
     test "when the same key is present multiple times it uses the first one added" do
       opts = [
+        by: :strategy,
         repo: TestRepo,
         planner: PlannerModule,
         cursor_mod: Chunkr.Cursor.Base64,
@@ -122,9 +150,9 @@ defmodule Chunkr.OptsTest do
         max_limit: 100
       ]
 
-      assert {:invalid_opts, _} = Opts.new(:strategy, :asc, opts)
-      assert {:invalid_opts, _} = Opts.new(:strategy, :asc, opts ++ [{:max_limit, 101}])
-      assert {:ok, _} = Opts.new(:strategy, :asc, [{:max_limit, 101} | opts])
+      assert {:invalid_opts, _} = Opts.new(opts)
+      assert {:invalid_opts, _} = Opts.new(opts ++ [{:max_limit, 101}])
+      assert {:ok, _} = Opts.new([{:max_limit, 101} | opts])
     end
   end
 end

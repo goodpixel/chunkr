@@ -7,10 +7,10 @@ defmodule Chunkr.Opts do
     * `:repo` — The `Ecto.Repo` for the query.
     * `:planner` — The module implementing the pagination strategy.
     * `:strategy` — The name of the pagination strategy to use.
-    * `:sort_dir` — The primary sort direction used for the query. Note that this
-      aligns with the very first `sort` clause registered in the named pagination strategy.
-      Any subsequent sort directions within the strategy will always be automatically
-      adjusted to maintain the overall strategy.
+    * `:disposition` — Whether the strategy should be executed as written or inverted.
+      For example, if the established strategy orders by `[desc: :last_name, asc: :created_at]`,
+      inverting would flip the ordering to be `[asc: :last_name, desc: :created_at]`.
+      Must be either `:regular` or `:inverted`.
     * `:paging_dir` — Either `:forward` or `:backward` depending on whether gathering
       results from the start or the end of the result set (i.e. whether the limit was
       specified as `:first` or `:last`).
@@ -22,13 +22,11 @@ defmodule Chunkr.Opts do
     * `:limit` — The requested page size (as specified by `:first` or `:last`).
   """
 
-  @type sort_dir :: :asc | :desc
-
   @type t :: %__MODULE__{
           repo: atom(),
           planner: atom(),
           strategy: atom(),
-          sort_dir: sort_dir(),
+          disposition: :regular | :inverted,
           paging_dir: :forward | :backward,
           cursor: Chunkr.Cursor.cursor() | nil,
           cursor_mod: module(),
@@ -40,7 +38,7 @@ defmodule Chunkr.Opts do
     :repo,
     :planner,
     :strategy,
-    :sort_dir,
+    :disposition,
     :paging_dir,
     :cursor,
     :cursor_mod,
@@ -51,23 +49,24 @@ defmodule Chunkr.Opts do
   @doc """
   Validate provided options and return a `Chunkr.Opts` struct
   """
-  @spec new(any, sort_dir, keyword) :: {:invalid_opts, String.t()} | {:ok, struct}
-  def new(strategy, sort_dir, opts) do
-    case validate_options(strategy, opts) do
-      {:ok, opts} -> {:ok, struct!(%__MODULE__{sort_dir: sort_dir}, opts)}
+  @spec new(keyword) :: {:invalid_opts, String.t()} | {:ok, struct}
+  def new(opts) do
+    case validate_options(opts) do
+      {:ok, opts} -> {:ok, struct!(__MODULE__, opts)}
       {:error, message} -> {:invalid_opts, message}
     end
   end
 
-  defp validate_options(strategy, opts) do
-    with {:ok, limit, cursor, paging_direction} <- validate(opts),
+  defp validate_options(opts) do
+    with {:ok, limit, cursor, disposition, paging_direction} <- validate(opts),
          {:ok, _limit} <- validate_limit(limit, opts) do
       {:ok,
        %{
          repo: Keyword.fetch!(opts, :repo),
          planner: Keyword.fetch!(opts, :planner),
-         strategy: strategy,
+         strategy: Keyword.fetch!(opts, :by),
          paging_dir: paging_direction,
+         disposition: disposition,
          max_limit: Keyword.fetch!(opts, :max_limit),
          limit: limit,
          cursor: cursor,
@@ -94,8 +93,11 @@ defmodule Chunkr.Opts do
     provided_key_set = MapSet.new(provided_keys)
 
     case MapSet.new(@valid_sets) |> MapSet.member?(provided_key_set) do
-      true -> {:ok, get_limit(opts), get_cursor(opts), get_paging_direction(opts)}
-      false -> {:error, pagination_args_error(provided_keys)}
+      true ->
+        {:ok, get_limit(opts), get_cursor(opts), get_disposition(opts), get_paging_dir(opts)}
+
+      false ->
+        {:error, pagination_args_error(provided_keys)}
     end
   end
 
@@ -107,7 +109,11 @@ defmodule Chunkr.Opts do
     Keyword.get(opts, :after) || Keyword.get(opts, :before)
   end
 
-  defp get_paging_direction(opts) do
+  defp get_disposition(opts) do
+    if Keyword.get(opts, :inverted) == true, do: :inverted, else: :regular
+  end
+
+  defp get_paging_dir(opts) do
     if Keyword.get(opts, :first), do: :forward, else: :backward
   end
 

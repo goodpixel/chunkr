@@ -45,7 +45,7 @@ defmodule Chunkr.TestPaginationPlanner do
   #
   # The essential thing we're looking for here is that phone numbers without an
   # associated user aren't inadvertently dropped from the paginated resut set.
-  paginate_by :by_possibly_null_association do
+  paginate_by :possibly_null_assoc do
     sort :asc, fragment("coalesce(?, ?)", as(:user).first_name, "~~~~~")
     sort :asc, as(:phone).id
   end

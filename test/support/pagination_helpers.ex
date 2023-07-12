@@ -7,17 +7,20 @@ defmodule Chunkr.PaginationHelpers do
 
   @max_limit 100
 
-  def verify_pagination(repo, query, strategy, sort_dir, expected_results, expected_count) do
-    verify_forward(repo, query, strategy, sort_dir, expected_results, expected_count)
-    verify_backward(repo, query, strategy, sort_dir, expected_results, expected_count)
-    verify_pages(repo, query, strategy, sort_dir, expected_count)
+  def verify_pagination(repo, query, opts, expected_results, expected_count) do
+    verify_forward(repo, query, opts, expected_results, expected_count)
+    verify_backward(repo, query, opts, expected_results, expected_count)
+    verify_pages(repo, query, opts, expected_count)
   end
 
-  defp verify_forward(repo, query, strategy, sort_dir, expected_results, expected_count) do
+  defp verify_forward(repo, query, opts, expected_results, expected_count) do
+    inverted = Keyword.get(opts, :inverted, false)
+    strategy = Keyword.fetch!(opts, :by)
+
     check all limit <- integer(1..@max_limit) do
       paginated_results =
         repo
-        |> page_thru(query, strategy, sort_dir, first: limit)
+        |> page_thru(query, by: strategy, inverted: inverted, first: limit)
         |> Enum.flat_map(fn page -> Page.records(page) end)
 
       assert expected_results == paginated_results
@@ -25,11 +28,14 @@ defmodule Chunkr.PaginationHelpers do
     end
   end
 
-  defp verify_backward(repo, query, strategy, sort_dir, expected_results, expected_count) do
+  defp verify_backward(repo, query, opts, expected_results, expected_count) do
+    inverted = Keyword.get(opts, :inverted, false)
+    strategy = Keyword.fetch!(opts, :by)
+
     check all limit <- integer(1..@max_limit) do
       paginated_results =
         repo
-        |> page_thru(query, strategy, sort_dir, last: limit)
+        |> page_thru(query, by: strategy, inverted: inverted, last: limit)
         |> Enum.reverse()
         |> Enum.flat_map(fn page -> Page.records(page) end)
 
@@ -38,19 +44,22 @@ defmodule Chunkr.PaginationHelpers do
     end
   end
 
-  defp verify_pages(repo, query, strategy, sort_dir, expected_count) do
+  defp verify_pages(repo, query, opts, expected_count) do
+    inverted = Keyword.get(opts, :inverted, false)
+    strategy = Keyword.fetch!(opts, :by)
+
     check all limit <- integer(1..@max_limit),
               paging_direction <- one_of([constant(:forward), constant(:backward)]) do
       opts =
         case paging_direction do
-          :forward -> [first: limit]
-          :backward -> [last: limit]
+          :forward -> [by: strategy, inverted: inverted, first: limit]
+          :backward -> [by: strategy, inverted: inverted, last: limit]
         end
 
       final_page = final_page_number(expected_count, limit)
 
       repo
-      |> page_thru(query, strategy, sort_dir, opts)
+      |> page_thru(query, opts)
       |> Stream.with_index(1)
       |> Enum.each(fn {page, page_num} ->
         assert has_previous_page?(paging_direction, page_num, final_page) ==
@@ -62,21 +71,18 @@ defmodule Chunkr.PaginationHelpers do
     end
   end
 
-  @doc """
-  Streams pages for the entire result set starting with the given opts
-  """
-  def page_thru(repo, query, strategy, sort_dir, opts) do
+  defp page_thru(repo, query, opts) do
     paging_dir =
-      case opts do
-        [first: _limit] -> :forward
-        [last: _limit] -> :backward
+      cond do
+        Keyword.get(opts, :first) -> :forward
+        Keyword.get(opts, :last) -> :backward
       end
 
-    repo.paginate!(query, strategy, sort_dir, opts)
+    repo.paginate!(query, opts)
     |> Stream.unfold(fn
       %Page{has_next_page: true, end_cursor: c} = page when paging_dir == :forward ->
         opts = Keyword.put(opts, :after, c)
-        next_result = repo.paginate!(query, strategy, sort_dir, opts)
+        next_result = repo.paginate!(query, opts)
         {page, next_result}
 
       %Page{has_next_page: false} = page when paging_dir == :forward ->
@@ -84,7 +90,7 @@ defmodule Chunkr.PaginationHelpers do
 
       %Page{has_previous_page: true, start_cursor: c} = page when paging_dir == :backward ->
         opts = Keyword.put(opts, :before, c)
-        next_result = repo.paginate!(query, strategy, sort_dir, opts)
+        next_result = repo.paginate!(query, opts)
         {page, next_result}
 
       %Page{has_previous_page: false} = page when paging_dir == :backward ->
