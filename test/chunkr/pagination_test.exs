@@ -37,7 +37,7 @@ defmodule Chunkr.PaginationTest do
   defmodule OtherRepo do
     use Chunkr,
       planner: Chunkr.TestPaginationPlanner,
-      max_limit: 123_456
+      max_page_size: 123_456
 
     def all(_queryable), do: []
   end
@@ -52,7 +52,7 @@ defmodule Chunkr.PaginationTest do
 
   describe "opts" do
     test "respects config provided to `use Chunkr`" do
-      assert %Page{opts: %{planner: Chunkr.TestPaginationPlanner, max_limit: 123_456}} =
+      assert %Page{opts: %{planner: Chunkr.TestPaginationPlanner, max_page_size: 123_456}} =
                OtherRepo.paginate!(from(u in User, as: :user), by: :single_field, first: 10)
     end
 
@@ -60,7 +60,7 @@ defmodule Chunkr.PaginationTest do
       assert %Page{
                opts: %{
                  planner: AnotherPaginationPlanner,
-                 max_limit: 999_999
+                 max_page_size: 999_999
                }
              } =
                OtherRepo.paginate!(
@@ -68,7 +68,7 @@ defmodule Chunkr.PaginationTest do
                  first: 10,
                  by: :another_strategy,
                  planner: AnotherPaginationPlanner,
-                 max_limit: 999_999
+                 max_page_size: 999_999
                )
     end
   end

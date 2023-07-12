@@ -12,14 +12,14 @@ defmodule Chunkr.Opts do
       inverting would flip the ordering to be `[asc: :last_name, desc: :created_at]`.
       Must be either `:regular` or `:inverted`.
     * `:paging_dir` — Either `:forward` or `:backward` depending on whether gathering
-      results from the start or the end of the result set (i.e. whether the limit was
-      specified as `:first` or `:last`).
+      results from the start or the end of the result set (i.e. whether a value was provided for
+      `:first` or for `:last`).
     * `:cursor` — The `:after` or `:before` cursor beyond which results are retrieved.
     * `:cursor_mod` — The module implementing the `Chunkr.Cursor` behaviour to be used
       for encoding/decoding cursor values. The default is `Chunkr.Cursor.Base64`, but a
       custom cursor module can be provided.
-    * `:max_limit` — The maximum allowed page size.
-    * `:limit` — The requested page size (as specified by `:first` or `:last`).
+    * `:max_page_size` — The maximum allowed page size.
+    * `:page_size` — The requested page size (as specified by `:first` or `:last`).
   """
 
   @type t :: %__MODULE__{
@@ -30,8 +30,8 @@ defmodule Chunkr.Opts do
           paging_dir: :forward | :backward,
           cursor: Chunkr.Cursor.cursor() | nil,
           cursor_mod: module(),
-          max_limit: pos_integer(),
-          limit: pos_integer()
+          max_page_size: pos_integer(),
+          page_size: pos_integer()
         }
 
   defstruct [
@@ -42,8 +42,8 @@ defmodule Chunkr.Opts do
     :paging_dir,
     :cursor,
     :cursor_mod,
-    :max_limit,
-    :limit
+    :max_page_size,
+    :page_size
   ]
 
   @doc """
@@ -58,8 +58,8 @@ defmodule Chunkr.Opts do
   end
 
   defp validate_options(opts) do
-    with {:ok, limit, cursor, disposition, paging_direction} <- validate(opts),
-         {:ok, _limit} <- validate_limit(limit, opts) do
+    with {:ok, page_size, cursor, disposition, paging_direction} <- validate(opts),
+         {:ok, _page_size} <- validate_page_size(page_size, opts) do
       {:ok,
        %{
          repo: Keyword.fetch!(opts, :repo),
@@ -67,8 +67,8 @@ defmodule Chunkr.Opts do
          strategy: Keyword.fetch!(opts, :by),
          paging_dir: paging_direction,
          disposition: disposition,
-         max_limit: Keyword.fetch!(opts, :max_limit),
-         limit: limit,
+         max_page_size: Keyword.fetch!(opts, :max_page_size),
+         page_size: page_size,
          cursor: cursor,
          cursor_mod: Keyword.fetch!(opts, :cursor_mod)
        }}
@@ -94,14 +94,14 @@ defmodule Chunkr.Opts do
 
     case MapSet.new(@valid_sets) |> MapSet.member?(provided_key_set) do
       true ->
-        {:ok, get_limit(opts), get_cursor(opts), get_disposition(opts), get_paging_dir(opts)}
+        {:ok, get_page_size(opts), get_cursor(opts), get_disposition(opts), get_paging_dir(opts)}
 
       false ->
         {:error, pagination_args_error(provided_keys)}
     end
   end
 
-  defp get_limit(opts) do
+  defp get_page_size(opts) do
     Keyword.get(opts, :first) || Keyword.get(opts, :last)
   end
 
@@ -121,18 +121,19 @@ defmodule Chunkr.Opts do
     ~s(Invalid pagination params: [#{Enum.join(provided_keys, ", ")}]. Valid combinations are: #{@valid_combos}.)
   end
 
-  defp validate_limit(limit, opts) do
-    max_limit = Keyword.fetch!(opts, :max_limit)
+  defp validate_page_size(page_size, opts) do
+    max_page_size = Keyword.fetch!(opts, :max_page_size)
 
     cond do
-      limit < 0 ->
-        {:error, "Page size of #{limit} was requested, but page size must be at least 0."}
+      page_size <= 0 ->
+        {:error, "Page size of #{page_size} was requested, but page size must be at least 1."}
 
-      limit <= max_limit ->
-        {:ok, limit}
+      page_size > 0 and page_size <= max_page_size ->
+        {:ok, page_size}
 
       true ->
-        {:error, "Page size of #{limit} was requested, but maximum page size is #{max_limit}."}
+        {:error,
+         "Page size of #{page_size} was requested, but maximum page size is #{max_page_size}."}
     end
   end
 end

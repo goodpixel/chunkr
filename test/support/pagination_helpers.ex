@@ -5,7 +5,7 @@ defmodule Chunkr.PaginationHelpers do
   import ExUnit.Assertions, only: [assert: 1]
   alias Chunkr.Page
 
-  @max_limit 100
+  @max_page_size 100
 
   def verify_pagination(repo, query, opts, expected_results, expected_count) do
     verify_forward(repo, query, opts, expected_results, expected_count)
@@ -17,10 +17,10 @@ defmodule Chunkr.PaginationHelpers do
     inverted = Keyword.get(opts, :inverted, false)
     strategy = Keyword.fetch!(opts, :by)
 
-    check all limit <- integer(1..@max_limit) do
+    check all page_size <- integer(1..@max_page_size) do
       paginated_results =
         repo
-        |> page_thru(query, by: strategy, inverted: inverted, first: limit)
+        |> page_thru(query, by: strategy, inverted: inverted, first: page_size)
         |> Enum.flat_map(fn page -> Page.records(page) end)
 
       assert expected_results == paginated_results
@@ -32,10 +32,10 @@ defmodule Chunkr.PaginationHelpers do
     inverted = Keyword.get(opts, :inverted, false)
     strategy = Keyword.fetch!(opts, :by)
 
-    check all limit <- integer(1..@max_limit) do
+    check all page_size <- integer(1..@max_page_size) do
       paginated_results =
         repo
-        |> page_thru(query, by: strategy, inverted: inverted, last: limit)
+        |> page_thru(query, by: strategy, inverted: inverted, last: page_size)
         |> Enum.reverse()
         |> Enum.flat_map(fn page -> Page.records(page) end)
 
@@ -48,15 +48,15 @@ defmodule Chunkr.PaginationHelpers do
     inverted = Keyword.get(opts, :inverted, false)
     strategy = Keyword.fetch!(opts, :by)
 
-    check all limit <- integer(1..@max_limit),
+    check all page_size <- integer(1..@max_page_size),
               paging_direction <- one_of([constant(:forward), constant(:backward)]) do
       opts =
         case paging_direction do
-          :forward -> [by: strategy, inverted: inverted, first: limit]
-          :backward -> [by: strategy, inverted: inverted, last: limit]
+          :forward -> [by: strategy, inverted: inverted, first: page_size]
+          :backward -> [by: strategy, inverted: inverted, last: page_size]
         end
 
-      final_page = final_page_number(expected_count, limit)
+      final_page = final_page_number(expected_count, page_size)
 
       repo
       |> page_thru(query, opts)
@@ -66,7 +66,7 @@ defmodule Chunkr.PaginationHelpers do
                  page.has_previous_page
 
         assert has_next_page?(paging_direction, page_num, final_page) == page.has_next_page
-        assert page_size(page_num, expected_count, limit) == length(page.raw_results)
+        assert page_size(page_num, expected_count, page_size) == length(page.raw_results)
       end)
     end
   end
@@ -101,23 +101,23 @@ defmodule Chunkr.PaginationHelpers do
     end)
   end
 
-  defp page_size(_page_number, 0, _limit), do: 0
+  defp page_size(_page_number, 0, _page_size), do: 0
 
-  defp page_size(page_number, total, limit) do
-    final_page = final_page_number(total, limit)
+  defp page_size(page_number, total, page_size) do
+    final_page = final_page_number(total, page_size)
 
     if page_number == final_page do
-      final_page_size(total, limit)
+      final_page_size(total, page_size)
     else
-      limit
+      page_size
     end
   end
 
-  defp final_page_number(total_count, limit), do: ceil(total_count / limit)
+  defp final_page_number(total_count, page_size), do: ceil(total_count / page_size)
 
-  defp final_page_size(total_count, limit) do
-    case Integer.mod(total_count, limit) do
-      0 -> limit
+  defp final_page_size(total_count, page_size) do
+    case Integer.mod(total_count, page_size) do
+      0 -> page_size
       leftover -> leftover
     end
   end

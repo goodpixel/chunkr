@@ -10,6 +10,7 @@ defmodule Chunkr.Pagination do
   you'll inherit any configuration previously set on your call to `use Chunkr`.
   """
 
+  require Ecto.Query
   alias Chunkr.{Cursor, Opts, Page}
 
   @doc """
@@ -25,12 +26,12 @@ defmodule Chunkr.Pagination do
       For example, if the established strategy orders by `[desc: :last_name, asc: :created_at]`,
       inverting would flip the ordering to be `[asc: :last_name, desc: :created_at]`. Inverts
       the specified ordering only if set to `true`.
-    * `:first` — Retrieve the first _n_ results; must be between `0` and `:max_limit`.
-    * `:last` — Retrieve the last _n_ results; must be between `0` and `:max_limit`.
+    * `:first` — Retrieve the first _n_ results; must be between `0` and `:max_page_size`.
+    * `:last` — Retrieve the last _n_ results; must be between `0` and `:max_page_size`.
     * `:after` — Return results starting after the provided cursor; optionally pairs with `:first`.
     * `:before` — Return results ending at the provided cursor; optionally pairs with `:last`.
-    * `:max_limit` — Maximum number of results the user can request for this query.
-      Default is #{Chunkr.default_max_limit()}.
+    * `:max_page_size` — Maximum number of results the user can request for this query.
+      Default is #{Chunkr.default_max_page_size()}.
     * `:cursor_mod` — Specifies the cursor module to use for encoding values as a cursor.
       Defaults to `Chunkr.Cursor.Base64`.
     * `:repo` — Repo to use for querying (automatically passed when calling either of
@@ -47,10 +48,10 @@ defmodule Chunkr.Pagination do
         |> apply_where(opts)
         |> apply_order(opts)
         |> apply_select(opts)
-        |> apply_limit(opts.limit + 1, opts)
+        |> apply_limit(opts)
         |> opts.repo.all()
 
-      requested_rows = Enum.take(extended_rows, opts.limit)
+      requested_rows = Enum.take(extended_rows, opts.page_size)
 
       rows_to_return =
         case opts.paging_dir do
@@ -123,7 +124,8 @@ defmodule Chunkr.Pagination do
     opts.planner.apply_select(query, opts.strategy)
   end
 
-  defp apply_limit(query, limit, opts) do
-    opts.planner.apply_limit(query, limit)
+  defp apply_limit(query, opts) do
+    limit = opts.page_size + 1
+    Ecto.Query.limit(query, ^limit)
   end
 end

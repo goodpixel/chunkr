@@ -12,7 +12,7 @@ defmodule Chunkr.OptsTest do
                 disposition: :regular,
                 paging_dir: :forward,
                 cursor: nil,
-                limit: 101
+                page_size: 101
               }} =
                Opts.new(
                  by: :first_name,
@@ -20,7 +20,7 @@ defmodule Chunkr.OptsTest do
                  planner: PlannerModule,
                  cursor_mod: Chunkr.Cursor.Base64,
                  first: 101,
-                 max_limit: 200
+                 max_page_size: 200
                )
     end
 
@@ -31,7 +31,7 @@ defmodule Chunkr.OptsTest do
                 disposition: :regular,
                 paging_dir: :forward,
                 cursor: "abc123",
-                limit: 101
+                page_size: 101
               }} =
                Opts.new(
                  by: :first_name,
@@ -40,7 +40,7 @@ defmodule Chunkr.OptsTest do
                  cursor_mod: Chunkr.Cursor.Base64,
                  first: 101,
                  after: "abc123",
-                 max_limit: 200
+                 max_page_size: 200
                )
     end
 
@@ -51,7 +51,7 @@ defmodule Chunkr.OptsTest do
                 disposition: :regular,
                 paging_dir: :backward,
                 cursor: nil,
-                limit: 99
+                page_size: 99
               }} =
                Opts.new(
                  by: :middle_name,
@@ -59,7 +59,7 @@ defmodule Chunkr.OptsTest do
                  planner: PlannerModule,
                  cursor_mod: Chunkr.Cursor.Base64,
                  last: 99,
-                 max_limit: 100
+                 max_page_size: 100
                )
     end
 
@@ -70,7 +70,7 @@ defmodule Chunkr.OptsTest do
                 disposition: :regular,
                 paging_dir: :backward,
                 cursor: "def456",
-                limit: 99
+                page_size: 99
               }} =
                Opts.new(
                  by: :middle_name,
@@ -79,7 +79,7 @@ defmodule Chunkr.OptsTest do
                  cursor_mod: Chunkr.Cursor.Base64,
                  last: 99,
                  before: "def456",
-                 max_limit: 100
+                 max_page_size: 100
                )
     end
 
@@ -90,7 +90,7 @@ defmodule Chunkr.OptsTest do
                 disposition: :inverted,
                 paging_dir: :forward,
                 cursor: "abc123",
-                limit: 101
+                page_size: 101
               }} =
                Opts.new(
                  by: :first_name,
@@ -100,7 +100,7 @@ defmodule Chunkr.OptsTest do
                  cursor_mod: Chunkr.Cursor.Base64,
                  first: 101,
                  after: "abc123",
-                 max_limit: 200
+                 max_page_size: 200
                )
     end
 
@@ -111,17 +111,18 @@ defmodule Chunkr.OptsTest do
       assert {:invalid_opts, _} = Opts.new(by: :middle_name, last: 99, after: 99)
     end
 
-    test "requesting a negative number of rows in an `{:invalid_opts, message}` error" do
+    test "requesting a non-positive number of rows in an `{:invalid_opts, message}` error" do
       opts = [
         by: :strategy,
         repo: TestRepo,
         planner: PlannerModule,
         cursor_mod: Chunkr.Cursor.Base64,
-        max_limit: 100
+        max_page_size: 100
       ]
 
       assert {:invalid_opts, _} = Opts.new([{:first, -1} | opts])
-      assert {:ok, _} = Opts.new([{:first, 0} | opts])
+      assert {:invalid_opts, _} = Opts.new([{:first, 0} | opts])
+      assert {:ok, _} = Opts.new([{:first, 1} | opts])
     end
 
     test "requesting too many rows results in an `{:invalid_opts, message}` error" do
@@ -130,7 +131,7 @@ defmodule Chunkr.OptsTest do
         repo: TestRepo,
         planner: PlannerModule,
         cursor_mod: Chunkr.Cursor.Base64,
-        max_limit: 5
+        max_page_size: 5
       ]
 
       assert {:invalid_opts, _} = Opts.new([{:first, 6} | opts])
@@ -147,12 +148,12 @@ defmodule Chunkr.OptsTest do
         planner: PlannerModule,
         cursor_mod: Chunkr.Cursor.Base64,
         first: 101,
-        max_limit: 100
+        max_page_size: 100
       ]
 
       assert {:invalid_opts, _} = Opts.new(opts)
-      assert {:invalid_opts, _} = Opts.new(opts ++ [{:max_limit, 101}])
-      assert {:ok, _} = Opts.new([{:max_limit, 101} | opts])
+      assert {:invalid_opts, _} = Opts.new(opts ++ [{:max_page_size, 101}])
+      assert {:ok, _} = Opts.new([{:max_page_size, 101} | opts])
     end
   end
 end

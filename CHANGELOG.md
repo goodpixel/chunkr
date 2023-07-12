@@ -13,6 +13,7 @@
     sort directions. This seemed clever, but it ended up being hard to grok. We now invert the
     specified sort orders when `inverted: true` is passed. In any other case, we leave the sort
     directions as specified.
+  * Rename `max_limit` and `limit` opts to `max_page_size` and `page_size` for clarity.
 
 ### Removals
   * `Page.total_count` has been removed as it offered little value (total count can be easily

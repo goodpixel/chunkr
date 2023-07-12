@@ -1,8 +1,8 @@
 defmodule Chunkr do
   @moduledoc false
 
-  @default_max_limit 100
-  @default_opts [cursor_mod: Chunkr.Cursor.Base64, max_limit: @default_max_limit]
+  @default_max_page_size 100
+  @default_opts [cursor_mod: Chunkr.Cursor.Base64, max_page_size: @default_max_page_size]
 
   @doc false
   defmacro __using__(config) do
@@ -20,5 +20,5 @@ defmodule Chunkr do
   end
 
   @doc false
-  def default_max_limit(), do: @default_max_limit
+  def default_max_page_size(), do: @default_max_page_size
 end
